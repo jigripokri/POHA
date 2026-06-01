@@ -4,7 +4,7 @@ Loaded only when a health question arises. Not surfaced in casual briefings.
 
 > **Sensitivity warning:** This file may contain bloodwork, diagnoses, medications, mental health notes. Like `finances.md`, it should never leave your machine. `.gitignore` excludes `memory/` by default.
 
-> **How to populate:** Fill in what you actually track. Skip what you don't. If you have a Fitbit / Whoop / Oura / Apple Watch connection, the exocortex can pull baseline metrics automatically — you only need to add context the wearable doesn't capture.
+> **How to populate:** Fill in what you actually track. Skip what you don't. If you have a Google Health (or Whoop / Oura / Apple Health / Garmin) connection, the briefings **auto-update the "Wearable data" sections below** — you only hand-edit the context the wearable can't capture (concerns, doctors, family history, genetic priors). See [`docs/health-system.md`](../docs/health-system.md) for how the four health surfaces work.
 
 ---
 
@@ -17,6 +17,42 @@ Loaded only when a health question arises. Not surfaced in casual briefings.
 - **Medications**: {{name + dose, or "none"}}
 - **Last physical**: {{date}}
 - **Primary care provider**: {{name + contact}}
+
+---
+
+## Wearable data (auto-updated by briefings)
+
+The briefings keep these three sections current. You don't hand-edit them. They feed the morning chip, weekly section, and monthly memo (see [`docs/health-system.md`](../docs/health-system.md)). Each metric below is **active** — pulled and tracked from the reconciled wearable stream.
+
+### Latest daily (written by the morning brief)
+
+| Metric | Latest | Baseline / target | Flag? |
+|--------|--------|-------------------|-------|
+| Sleep duration / score | {{value}} | {{target}} | {{deviation flag}} |
+| Resting HR | {{value}} | {{baseline}} | {{>baseline+5?}} |
+| HRV | {{value}} | {{7-day avg}} | {{sharp drop?}} |
+| Zone-2 minutes | {{value}} | {{target}} | {{multi-day zero?}} |
+| Weight | {{value}} | {{smoothed}} | {{spike?}} |
+| Valid-data days this week | {{n/7}} | ≥ ~80% | {{suppress if low}} |
+
+### Weekly trends (written by the weekly review)
+
+- **Resting HR Δ**: {{vs prior week}}
+- **Zone-2 vs target**: {{value}}
+- **Sleep avg + variance**: {{value}}
+- **HRV trend**: {{direction}}
+- **Step consistency**: {{days hit floor}}
+- **Smoothed weight Δ**: {{value}}
+- **Pattern of the week**: {{one observation}}
+
+### Monthly trajectory (written by the monthly memo)
+
+- **RHR floor**: {{trajectory}}
+- **HRV**: {{trajectory}}
+- **VO₂ max**: {{trajectory}}
+- **Weight**: {{trajectory}}
+- **Body fat**: {{trajectory}}
+- **Training load**: {{Zone-2 vs target over the month}}
 
 ---
 

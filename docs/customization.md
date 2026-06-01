@@ -47,7 +47,7 @@ Each briefing in `briefings/` is a standalone prompt. Edit them.
 ### Common edits
 
 **Remove a section you don't care about.**
-e.g., if you don't use Fitbit, delete Step 8 from `morning-brief.md`.
+e.g., if you don't track health data, delete the Google Health step from `morning-brief.md` (and skip the weekly/monthly health surfaces).
 
 **Add a section for your situation.**
 e.g., a founder might add to `morning-brief.md`:

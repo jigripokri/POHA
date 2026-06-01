@@ -67,12 +67,20 @@ Add these only if relevant.
 
 **What the exocortex needs**: Read inbox, read individual threads. (Sending is harder via web — usually not needed.)
 
-#### Fitbit (or equivalent wearable)
-**Why**: Sleep, HR, workouts feed into morning briefing context and health.md. Especially useful if your mood/energy correlates with sleep — the exocortex can flag bad sleep nights.
+#### Google Health (or equivalent wearable platform)
+**Why**: Sleep, resting HR, HRV, weight, body fat, and workouts feed into the health surfaces (morning chip, weekly section, monthly memo) and `health.md`. Especially useful if your mood/energy correlates with sleep — the exocortex can flag bad sleep nights.
 
-**How to connect**: Install the Fitbit plugin. Run `/fitbit-auth` once.
+We recommend **Google Health** over a single-device API for three reasons:
 
-**Substitution**: Same recipe works with Whoop, Oura, Apple Watch (via Health export), Garmin. Each has its own connector.
+- **Reconciled multi-source stream.** It merges multiple wearables/phones into one deduplicated view, so you're not stitching a watch and a phone together by hand.
+- **More signal.** It exposes HRV, weight, and body-fat trends that a single-device step-counting script tends to miss.
+- **It's the durable choice.** It's the official replacement as legacy single-vendor wearable Web APIs are sunset — building on it now avoids a forced migration later.
+
+**How to connect**: Install the Google Health plugin and run its OAuth flow **once** (read-only scopes). Tokens are stored locally on your machine. Briefings then call the health MCP tools (daily summary / weekly summary / rollup) **directly** — there's no sync script to babysit.
+
+**Substitution**: The recipe is generic. Whoop, Oura, Apple Health, and Garmin all still work via their own connectors — swap the MCP and keep the same four health surfaces (see [`health-system.md`](./health-system.md)).
+
+**Reliability caveat**: the health MCP can disconnect intermittently. Health surfaces are **non-blocking** — if it's down, the briefing proceeds silently (health is the lowest-priority input, never worth failing a brief over). Only after **multiple consecutive down-days** should a briefing surface a `⚠️ DEGRADED: health` note, so a single transient blip doesn't generate noise.
 
 #### Monarch Money (or financial aggregator)
 **Why**: Required only for the monthly financial sweep briefing. Pulls accounts, transactions, holdings.
@@ -114,7 +122,7 @@ For each source, run a minimal read:
 - Calendar: list events in next 1 hour
 - WhatsApp: list_contacts with limit 1
 - Tasks: navigate to tasks.google.com, screenshot
-- Fitbit: get_profile
+- Health: connection-status / profile ping on the health MCP
 - Monarch: check_auth_status
 
 Record each as UP or DOWN.

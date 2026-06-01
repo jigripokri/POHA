@@ -23,7 +23,7 @@ Exocortex is three layers stacked on top of Claude. Each layer is independently 
                     ┌─────────────▼─────────────────┐
                     │  MCP Connectors               │
                     │  WhatsApp · Gmail · Calendar  │
-                    │  Tasks · SMS · Fitbit · etc.  │
+                    │  Tasks · SMS · Health · etc.  │
                     └───────────────────────────────┘
 ```
 
@@ -41,7 +41,7 @@ Every briefing follows the same five-step recipe:
 
 **Step 1 — Memory load.** Read the seven memory files. This is the operator's context for everything that follows.
 
-**Step 2..N — Scan inputs.** WhatsApp groups, DMs, Gmail, Calendar, Tasks, SMS, Fitbit, Monarch — whatever this briefing needs. Always parallelize. Apply tier weights so high-signal threads surface first.
+**Step 2..N — Scan inputs.** WhatsApp groups, DMs, Gmail, Calendar, Tasks, SMS, Google Health, Monarch — whatever this briefing needs. Always parallelize. Apply tier weights so high-signal threads surface first.
 
 **Step N+1 — Emit + Update.** Compose the email with action items + acknowledgment links. Update memory files with anything new (commitments made, plans confirmed, insights surfaced). Send.
 
@@ -134,7 +134,7 @@ The exocortex is only as good as what it can see. Recommended connectors:
 | **Google Calendar** | Native MCP | Where commitments turn into events |
 | **Google Tasks** | Chrome scraping (no MCP yet) | Source of truth for "things I need to do" |
 | **Android Messages** | Chrome → messages.google.com | For SMS-only contacts (US carriers) |
-| **Fitbit** | Plugin with OAuth | Sleep, HR, workouts — input to health.md |
+| **Google Health** | Plugin with OAuth (read-only) | Reconciled wearable stream — sleep, RHR, HRV, weight — feeds the health surfaces + health.md |
 | **Monarch Money** | Local MCP server (read-only) | Source for the monthly financial sweep |
 
 Full setup in [`docs/data-sources.md`](./docs/data-sources.md). Known gotchas (WhatsApp bridge durability + liveness, the now-resolved LID migration) in [`docs/whatsapp-gotchas.md`](./docs/whatsapp-gotchas.md).
