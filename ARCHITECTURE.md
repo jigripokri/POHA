@@ -129,7 +129,7 @@ The exocortex is only as good as what it can see. Recommended connectors:
 
 | Source | Method | Why it matters |
 |--------|--------|----------------|
-| **WhatsApp** | Native MCP | Most personal conversation lives here for non-US users; commitments hide in here |
+| **WhatsApp** | Native MCP (whatsmeow/Go bridge, native name resolution) | Most personal conversation lives here for non-US users; commitments hide in here |
 | **Gmail** | Native MCP | Acknowledgment loop runs through this |
 | **Google Calendar** | Native MCP | Where commitments turn into events |
 | **Google Tasks** | Chrome scraping (no MCP yet) | Source of truth for "things I need to do" |
@@ -137,7 +137,7 @@ The exocortex is only as good as what it can see. Recommended connectors:
 | **Fitbit** | Plugin with OAuth | Sleep, HR, workouts — input to health.md |
 | **Monarch Money** | Local MCP server (read-only) | Source for the monthly financial sweep |
 
-Full setup in [`docs/data-sources.md`](./docs/data-sources.md). Known gotchas (especially WhatsApp's LID migration) in [`docs/whatsapp-gotchas.md`](./docs/whatsapp-gotchas.md).
+Full setup in [`docs/data-sources.md`](./docs/data-sources.md). Known gotchas (WhatsApp bridge durability + liveness, the now-resolved LID migration) in [`docs/whatsapp-gotchas.md`](./docs/whatsapp-gotchas.md).
 
 ---
 

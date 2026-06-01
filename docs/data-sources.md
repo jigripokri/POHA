@@ -39,11 +39,13 @@ Add these once Tier 1 is working.
 #### WhatsApp
 **Why**: For non-US users, most personal life lives here. Commitments hide in here. Family group chats. Plans get made.
 
-**How to connect**: Cowork → Connectors → Add WhatsApp. Scan QR with your phone. **Wait for full history sync** — 10–30 minutes depending on history size. Don't run briefings until sync completes.
+**Recommended bridge**: a native-resolution [whatsmeow](https://github.com/tulir/whatsmeow)-based (Go) MCP bridge. The store resolves contact and group-sender names natively from WhatsApp's own metadata — so names and LIDs come back resolved and you don't hand-maintain phone↔LID mappings.
+
+**How to connect**: Add WhatsApp via your client's connector/MCP config. Scan the QR with your phone. **Wait for full history sync** — 10–30 minutes depending on history size. Don't run briefings until sync completes. **Install the bridge as a persistent background service** (a startup-triggered Scheduled Task / `launchd` / `systemd` unit set to run unattended) so it survives reboots and is alive before your overnight briefings.
 
 **What the exocortex needs**: `list_messages`, `search_messages`, `search_contacts`, `send_message`.
 
-**Known issues**: See [`whatsapp-gotchas.md`](./whatsapp-gotchas.md). Especially the LID migration.
+**Known issues**: See [`whatsapp-gotchas.md`](./whatsapp-gotchas.md) — bridge durability, the bridge-liveness assertion (don't trust an empty scan), and the now-resolved LID migration.
 
 #### Google Tasks
 **Why**: Source of truth for "things I need to do today." If you keep tasks anywhere (Apple Reminders, Todoist, Notion), the exocortex can integrate via Chrome.

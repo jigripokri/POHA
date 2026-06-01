@@ -42,7 +42,7 @@ This exocortex stitches together messaging, email, calendar, tasks, fitness, and
 Scheduled tasks that produce structured emails. See `briefings/` for prompts. Each briefing follows the same recipe:
 
 - **Step 0** — Acknowledgment scan. Search Gmail for `subject:EXO_DONE`. Update commitments.
-- **Step 0.5** — Data source health check. Ping every source in parallel. Surface `⚠️ DEGRADED` banner if anything is down. Never block the briefing.
+- **Step 0.5** — Data source health check. Ping every source in parallel. Surface `⚠️ DEGRADED` banner if anything is down. Never block the briefing. For WhatsApp specifically, assert the bridge is **connected AND has received a message in the last 24h** — an empty scan from a silently disconnected bridge looks exactly like a quiet day, so treat "no activity at all in 24h" as bridge-down, not silence.
 - **Step 1** — Memory load. Read core memory files.
 - **Steps 2..N** — Scan inputs (parallelize aggressively).
 - **Step N+1** — Compose + send + update memory.
@@ -141,17 +141,20 @@ WhatsApp > Android Messages > Email > Tasks > Calendar > Fitness > Finance
 
 > Skip this section if you don't connect WhatsApp.
 
+**Bridge:** use a native-resolution [whatsmeow](https://github.com/tulir/whatsmeow)-based (Go) MCP bridge. The store resolves contact and group-sender names natively (a multi-thousand-row name/LID map), so you no longer hand-maintain phone↔LID mappings. Run it as a persistent, **startup-triggered** OS service ("run whether logged on or not") so overnight briefings survive an unattended reboot. Full failure-mode catalog in [`docs/whatsapp-gotchas.md`](./docs/whatsapp-gotchas.md).
+
 **Critical learnings (carried forward from real production use):**
 
-1. `list_chats` is **broken** — returns LID-based contacts with no names or timestamps. Never rely on it for discovery.
-2. Use `search_contacts` to find groups/people by name, then `list_messages` per chat.
+1. `list_chats(query="name")` works — returns the matching chat + a last-message preview. Called with **no** query it dumps thousands of unnamed `@lid` stubs (null names/timestamps); not useful for "what's active." Use `search_messages` with broad keywords for activity discovery.
+2. Use `search_contacts` or `list_chats(query=...)` to find groups/people by name, then `list_messages` per chat.
 3. For discovering unknown DMs: use `search_messages` with broad queries ("hey", "can you", "please", "tomorrow", "thanks", "ok").
 4. `limit` and `page` parameters must be numbers, not strings.
 5. `is_from_me` field detects unanswered messages.
-6. `sender_display` is often "Unknown" in groups — work with content even when sender is unclear.
+6. Names resolve natively — `chat_name` / `sender_name` come back populated in DMs and groups. A few group senders may still show "Unknown" / a bare LID; fall back to message content when that happens.
 7. **Always parallelize** — scanning 10+ groups sequentially is too slow.
-8. **🚨 LID Migration:** WhatsApp migrated DM identifiers from phone JIDs to LID JIDs around late March 2026. New DM messages may be stored under `XXXXXXXXXXXXXXX@lid` format, NOT the phone-based `+1XXXXXXXXXX@s.whatsapp.net` format. For DM sweeps, query BOTH the phone JID AND the LID JID. See [`docs/whatsapp-gotchas.md`](./docs/whatsapp-gotchas.md) for the full LID-discovery workflow.
+8. **LID migration (historically resolved):** WhatsApp moved DM identifiers from phone JIDs (`+1XXXXXXXXXX@s.whatsapp.net`) to LID JIDs (`XXXXXXXXXXXXXXX@lid`) around late March 2026. A native-resolution store reconciles a contact's phone JID and LID internally — so storing **dual JIDs per contact is no longer required** and there's no "scan both" step. Your priority-DM table can hold a single identity per person.
 9. **WhatsApp call logs (voice/video)** are NOT visible via the messaging API, but DO appear inline in WhatsApp Web chat threads. Use the **self-report model** when call cadence matters: ask the user "when did you last call X?" during briefing and update memory.
+10. **Bridge liveness — don't trust an empty scan.** A silently disconnected bridge returns zero messages that look like a quiet day. In Step 0.5, assert the bridge is **connected** AND has **received a message in the last 24h** before trusting an empty WhatsApp result. Treat "no WhatsApp activity at all in 24h" as a probable bridge-down signal → flag `⚠️ DEGRADED: WhatsApp`, don't report "quiet day."
 
 ### Priority WhatsApp Groups
 
@@ -175,7 +178,7 @@ Tier the people whose DMs you scan every day. The default structure:
 - **Tier 4 — "Brothers" / deep trust** (the 5–10 people you'd call at 3am)
 - **Tier 5 — Other active threads** (people with ongoing DM conversations right now)
 
-For each contact, store: name, JID, LID JID (if known), one-line context. ~30–40 contacts total is the right range for most lives. Update this list during weekly review as people cycle in and out of active threads.
+For each contact, store: name, a single identity (the JID/handle the store resolves them by), one-line context. With a native-resolution bridge you do **not** need to track separate phone and LID JIDs — the store reconciles them. ~30–40 contacts total is the right range for most lives. Update this list during weekly review as people cycle in and out of active threads.
 
 ---
 
@@ -188,7 +191,7 @@ For each contact, store: name, JID, LID JID (if known), one-line context. ~30–
 1. **Broad discovery sweep (parallelize all calls):** Run `search_messages` with 6 broad keywords, limit 20 each: `"ok"`, `"thanks"`, `"tomorrow"`, `"haha"`, `"please"`, `"yes"`.
 2. **Extract active chats:** Collect unique chat IDs from results in the last 24–48h. Exclude group chats and known bot chats.
 3. **Scan active chats:** For each discovered chat, `list_messages` (limit 10). Parallelize.
-4. **Identity resolution:** Match LID JIDs to known contacts using your priority DM table. For unknown LIDs, infer identity from message content.
+4. **Identity resolution:** `sender_name` is usually populated by the native-resolution store — match it against your priority DM table. For the rare unresolved LID, infer identity from message content (names mentioned, topics, relationship context).
 
 **Commitment detection heuristics (1:1 DMs):**
 
