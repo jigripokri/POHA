@@ -78,6 +78,25 @@ Read insights.md. Any patterns from the past week worth adding? Look at:
 
 Add at most 1–2 new insights per week. Quality > quantity.
 
+## Step 6.5 — Weekly health section (always present, if Google Health connected)
+
+Pull the Google Health **weekly summary** directly (no sync script). Unlike the morning chip, this section is **always present** — the weekly is the trend check.
+
+Report ~6 numbers, then one pattern, then one action:
+
+1. Resting HR Δ (vs prior week)
+2. Zone-2 minutes vs target
+3. Sleep average + variance
+4. HRV trend
+5. Step consistency (days that hit the floor)
+6. Smoothed weight Δ
+
+- **One pattern**: a single observation tying two metrics together ("you sleep 40 min less on nights after evening workouts").
+- **One action**: the smallest concrete change for the coming week.
+- Six numbers is the cap — don't dump the full panel.
+- **Wearable-compliance gate:** if valid-data days < ~80% of the week, skip the numbers and just note low compliance + a wear-the-device nudge.
+- Write these into health.md > Wearable data > Weekly trends.
+
 ## Step 7 — Next week preview
 
 Look at next week's calendar. Top 3 things that matter. Anything that needs prep this Sunday?
@@ -93,8 +112,9 @@ Sections:
 4. 📈 Priority alignment check (one honest paragraph)
 5. 🧹 Memory pruning summary (what got archived, what needs your decision)
 6. ⏰ Aging commitments (PENDING > 7 days)
-7. 🧠 New insights added this week
-8. 🃏 Wildcard (one contrarian observation about the past week)
+7. 🩺 Health this week (the 6 numbers + one pattern + one action — always present)
+8. 🧠 New insights added this week
+9. 🃏 Wildcard (one contrarian observation about the past week)
 
 Acknowledgment links on action items.
 

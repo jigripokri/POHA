@@ -26,9 +26,16 @@ For each match:
 ## Step 0.5 — Data source health check
 
 Ping each data source in parallel with a minimal read. Record UP/DOWN.
-Sources: Gmail, Calendar, Tasks, WhatsApp, Android Messages (if connected), Fitbit (if connected), Monarch (if connected).
+Sources: Gmail, Calendar, Tasks, WhatsApp, Android Messages (if connected), Google Health (if connected — connection-status / profile ping), Monarch (if connected).
 If any source is DOWN, surface a `⚠️ DEGRADED: <source>` banner at the top of the email.
 NEVER block the briefing on a degraded source — proceed with what's available.
+
+WhatsApp bridge-liveness assertion (critical — an empty scan can be a dead bridge, not a quiet day):
+- Confirm the bridge reports a connected/registered session.
+- Confirm the store has received at least one message (any chat) in the last 24h.
+- If either fails, treat "no WhatsApp activity" as a probable bridge-down signal → flag `⚠️ DEGRADED: WhatsApp` and say so plainly. Do NOT report a "quiet morning."
+
+Google Health is the lowest-priority source — never block or delay the brief on it. A single down-day is silent; only raise `⚠️ DEGRADED: health` after multiple consecutive down-days.
 
 ## Step 1 — Memory load
 
@@ -88,10 +95,25 @@ Navigate to tasks.google.com.
 For each task list flagged "primary" in CLAUDE.md, read open tasks.
 Surface anything overdue or due today.
 
-## Step 8 — Health (if Fitbit connected)
+## Step 8 — Health chip (if Google Health connected) — CONDITIONAL & SILENT BY DEFAULT
 
-Pull yesterday's: sleep duration + score, resting HR, steps, active zone minutes.
-If sleep < 6h or HR is anomalous, flag it. Otherwise one-line summary.
+Pull yesterday's daily summary directly from the Google Health MCP (daily summary / rollup). NO sync script — call the tools directly.
+
+This chip is **omitted entirely on a normal day.** Compute the deviation triggers and only surface a line if one trips:
+
+- Sleep below floor (e.g. < 6h, or a sleep-score collapse)
+- Resting HR > baseline + ~5 bpm (from health.md)
+- HRV down meaningfully vs the 7-day average
+- Multiple consecutive days of zero Zone-2 minutes
+- Weight spike outside normal day-to-day variance
+
+Rules when a trigger fires:
+- **Never dump numbers.** State the deviation in one plain line and imply the action. Plain language, never doctor-speak. ("Resting HR is running 6 bpm high for the third day — you're either fighting something off or under-slept. Skip the hard session.")
+- **Wearable-compliance gate:** if valid-data days are below ~80% of the week, SUPPRESS all triggers (the data's unreliable) and instead, at most, a one-line nudge to wear the device. A trend from three data points is worse than no trend.
+- **Genetic-context flags:** if health.md stores genetic risk priors, cross-reference them here (e.g. a clotting-risk prior + a long-haul flight on today's calendar → surface the relevant protocol). See [`docs/health-system.md`](../docs/health-system.md).
+- **Earned praise (scarce):** only if a real bar is cleared (streak milestone, target hit, sustained good trend) may you surface ONE praise line naming the specific behavior + payoff. Otherwise no praise. Never both an alert and praise in the same brief.
+
+Always write the latest daily snapshot into health.md > Wearable data > Latest daily, even when nothing surfaces in the email.
 
 ## Step 9 — Compose the email
 
@@ -109,7 +131,8 @@ Body sections, in this order:
 7. 💌 DMs (unanswered + commitments detected)
 8. 📅 Calendar today (events with prep notes)
 9. ✅ Open commitments aging (>3 days)
-10. 🧠 Insight (one wildcard observation from the data — see CLAUDE.md > Wildcard Insight)
+10. 🩺 Health chip (ONLY if a Step 8 trigger fired — omit this section entirely otherwise)
+11. 🧠 Insight (one wildcard observation from the data — see CLAUDE.md > Wildcard Insight)
 
 For EVERY action item, include a `mailto:` acknowledgment link:
 `<a href="mailto:{{USER_EMAIL}}?subject=EXO_DONE%3A%3A<slug>">✅ I did this</a>`
