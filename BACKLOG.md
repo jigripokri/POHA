@@ -16,6 +16,8 @@ What's shipped, what's next, what's blocked. Edit this for your fork.
 - ✅ GSD Friday agenda (Fri noon)
 - ✅ Weekend Fun Finder (Fri noon)
 - ✅ Monthly Financial Sweep (28th)
+- ✅ Monthly Health Memo (28th)
+- ✅ Bloodwork reminder (twice-yearly, the month before each draw)
 
 ### Layer 2 — Memory System
 - ✅ Seven memory file templates
@@ -31,8 +33,12 @@ What's shipped, what's next, what's blocked. Edit this for your fork.
 
 ### Infrastructure
 - ✅ Acknowledgment loop (mailto: + Step 0 scan)
-- ✅ Step 0.5 health check
-- ✅ MCP connections documented for Gmail, Calendar, WhatsApp, Tasks, SMS, Fitbit, Monarch
+- ✅ Step 0.5 health check (+ WhatsApp bridge-liveness assertion)
+- ✅ MCP connections documented for Gmail, Calendar, WhatsApp, Tasks, SMS, Google Health, Monarch
+
+### Migrations (completed)
+- ✅ **WhatsApp: Baileys (TS) → whatsmeow (Go) bridge** — native LID/name resolution, no more dual-JID juggling; persistent startup-triggered service + bridge-liveness assertion. *(2026-06)*
+- ✅ **Health: Fitbit Web API → Google Health API** — reconciled multi-source stream, briefings call the health MCP directly (sync script retired), four cadence-tuned health surfaces. *(2026-06)*
 
 ---
 
@@ -53,6 +59,8 @@ These are the highest-leverage extensions. Pick what fits your life.
 - [ ] **A second-opinion skill**: `/devils-advocate` for important decisions
 - [ ] **Travel mode**: a different briefing recipe when you're on the road
 - [ ] **Family briefing**: a Sunday-night recap email to your partner with the week's family logistics
+- [ ] **One-time longitudinal health backfill**: pull the full multi-year history from Google Health once to seed baselines/trajectories, so trend math isn't starting from scratch
+- [ ] **Auto-drafted pre-bloodwork ask-list**: turn the monthly memo's pre-draw prep section into a ready-to-send draft for your doctor (wearable trends → concrete questions)
 
 ---
 

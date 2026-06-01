@@ -104,9 +104,10 @@ Three tiers of recommended connections. Start minimal; add more later.
 
 ### Domain-specific adds (optional)
 
-5. **Fitbit** — For health.md and morning briefing fitness context.
-   - Install the Fitbit plugin.
-   - Run `/fitbit-auth` once to authorize.
+5. **Google Health** — For the health surfaces (morning chip, weekly section, monthly memo) and `health.md`.
+   - Install the Google Health plugin.
+   - Run its OAuth flow once (read-only scopes); tokens are stored locally. Briefings then call the health MCP directly — no sync script.
+   - Using Whoop / Oura / Apple Health / Garmin instead? Same recipe — swap the connector. See [`docs/health-system.md`](./docs/health-system.md).
 
 6. **Monarch Money** — For the monthly financial sweep.
    - Install the Monarch Money plugin.
@@ -155,7 +156,7 @@ Once memory is bootstrapped, wire up the scheduled tasks:
 
 Tell Claude:
 
-> *"Set up the seven scheduled tasks defined in BACKLOG.md. Use the prompts in briefings/. Confirm each cron schedule before creating."*
+> *"Set up the scheduled tasks defined in BACKLOG.md. Use the prompts in briefings/. Confirm each cron schedule before creating."*
 
 Claude will create:
 
@@ -166,6 +167,8 @@ Claude will create:
 - GSD Friday: `0 12 * * 5` (Friday noon)
 - Weekend Fun Finder: `0 12 * * 5` (Friday noon)
 - Monthly finance: `0 6 28 * *` (28th of each month, 6am)
+- Monthly health memo: `0 7 28 * *` (28th of each month, 7am)
+- Bloodwork reminder: twice yearly, the month before each draw (set your two draw months — e.g. `0 8 1 3,9 *` for Mar 1 & Sep 1)
 
 You can adjust times to match your schedule. The morning brief should land before your alarm goes off.
 

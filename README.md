@@ -24,7 +24,7 @@ This repo wires all three.
 
 ## What you get on day one
 
-Seven scheduled tasks already wired up:
+Nine scheduled tasks already wired up:
 
 - **5am daily — Morning briefing.** Scans your WhatsApp groups + DMs, Gmail, Calendar, and tasks. Flags commitments, unanswered threads, and what's on your plate today. Emails you the result with one-tap acknowledgment links for every action item.
 - **9pm daily — Evening reflection.** Catches plans confirmed after the morning pass, updates memory.
@@ -33,6 +33,8 @@ Seven scheduled tasks already wired up:
 - **Friday noon — GSD agenda.** Builds a punch list from your tasks + open commitments for a Friday focus block.
 - **Friday noon — Weekend Fun Finder.** Searches local events, scored against your household's preferences.
 - **28th monthly — Financial sweep.** Spending autopsy, net worth update, subscription audit, credit card optimization.
+- **28th monthly — Health memo.** A ~250-word trajectory read on vitals, training load, and sleep from your wearable (via Google Health) — silent on the daily noise, surfacing only what's trending.
+- **Twice yearly — Bloodwork reminder.** The month before each draw, preps a doctor ask-list mapping your wearable trends to questions worth asking.
 
 Five on-demand skills:
 
@@ -66,7 +68,8 @@ Three layers. Full breakdown in [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 ┌──────────────────────────────────────────────────────────┐
 │ Layer 1 — The Briefing Engine (scheduled tasks)           │
 │   morning · evening · weekly · daily commitment sweep ·   │
-│   GSD agenda · weekend finder · monthly finance           │
+│   GSD agenda · weekend finder · monthly finance ·         │
+│   monthly health memo · bloodwork reminder                │
 ├──────────────────────────────────────────────────────────┤
 │ Layer 2 — The Memory System (seven markdown files)        │
 │   people · commitments · life · insights ·                │
@@ -79,8 +82,9 @@ Three layers. Full breakdown in [`ARCHITECTURE.md`](./ARCHITECTURE.md).
          │ reads/writes via MCP connectors
          ▼
 ┌──────────────────────────────────────────────────────────┐
-│ WhatsApp · Gmail · Google Calendar · Google Tasks ·       │
-│ Android Messages · Fitbit · Monarch Money                 │
+│ WhatsApp (whatsmeow/Go bridge, native name resolution) ·  │
+│ Gmail · Google Calendar · Google Tasks ·                  │
+│ Android Messages · Google Health · Monarch Money          │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -119,7 +123,7 @@ See [`docs/customization.md`](./docs/customization.md).
 ## What it costs
 
 - **Claude Pro or Max subscription**: already what you're paying. Max recommended if you're running all seven scheduled tasks against a busy life.
-- **MCP connectors**: free for personal accounts (Gmail, Calendar, WhatsApp, Fitbit). Monarch Money is $15/mo if you want financial sweeps.
+- **MCP connectors**: free for personal accounts (Gmail, Calendar, WhatsApp, Google Health). Monarch Money is $15/mo if you want financial sweeps.
 - **Your time**: ~3 hours upfront to bootstrap memory honestly. ~5 min/week to review what POHA surfaces. The 3 hours pay back inside a month.
 
 ---
