@@ -37,7 +37,7 @@ Every briefing follows the same five-step recipe:
 
 **Step 0 — Acknowledgment scan.** Search Gmail for `subject:EXO_DONE`. Extract slugs, match to `commitments.md`, update status to ✅, archive the signal emails. This is how offline actions close the loop.
 
-**Step 0.5 — Data source health check.** Ping every MCP in parallel, record UP/DOWN. If anything is unreachable, surface a `⚠️ DEGRADED` banner in the email. Never block the briefing — a degraded briefing is better than no briefing.
+**Step 0.5 — Data source health check.** Ping every MCP in parallel, record UP/DOWN. If anything is unreachable, surface a `⚠️ DEGRADED` banner in the email. Never block the briefing — a degraded briefing is better than no briefing. Two special cases: **WhatsApp** needs a *liveness assertion* (connected + traffic in the last 24h), because an empty scan from a dead bridge looks exactly like a quiet day; and **health** is non-blocking and noise-suppressed (silent on a single down-day, `DEGRADED` only after several). See [`docs/data-sources.md`](./docs/data-sources.md#health-check-protocol-step-05).
 
 **Step 1 — Memory load.** Read the seven memory files. This is the operator's context for everything that follows.
 

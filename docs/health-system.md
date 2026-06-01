@@ -95,3 +95,36 @@ So the health surfaces **auto-suppress when compliance is low**: if the week has
 ## Why this is non-blocking
 
 Health is the **lowest-priority input** in the stack. It is never worth failing or delaying a briefing over. If the health MCP is unreachable, the briefing proceeds silently with no health surface, and only after **multiple consecutive down-days** does it raise a `⚠️ DEGRADED: health` note (see [`data-sources.md`](./data-sources.md#tier-3--domain-specific)). A single transient disconnect should generate zero noise.
+
+---
+
+## Optional: the genetic-context layer
+
+If you have genome data (a consumer DNA report, a clinical panel), you can give the health surfaces a fixed layer of **risk priors** to reason against — read on *every* health surface, not just the monthly memo.
+
+How to wire it, safely:
+
+- Store **risk priors only** in `health.md` — short, plain-language statements of *which signals matter most for you and why* (e.g. "elevated clotting risk → watch recovery and hydration around long-haul flights"; "lipid-sensitive → weight up + training down is a bigger deal than for most"). **Do not paste raw reports, variant IDs, or clinical findings into the repo.** The repo is your operating layer, not your medical record.
+- Have each surface **cross-reference** the priors against live data. Two patterns this enables:
+  - **Event-triggered protocols.** The morning brief can read a prior plus today's calendar — e.g. a clotting-risk prior + a flight over ~6h on the calendar → surface a movement/hydration protocol and watch recovery metrics for a few days after.
+  - **Weighted interpretation.** The same RHR or weight drift means more (or less) depending on your priors — the monthly memo surfaces the priors the month's data actually touches, and stays quiet on the rest.
+
+The principle: the genome sets the *priors* (what to watch), the bloodwork is the periodic *ground truth*, and the wearable is the *continuous drift signal* between draws. Surfaces read all three. This layer is entirely optional — with no genetic data stored, every surface simply skips it.
+
+> **Privacy:** genetic data is among the most sensitive you have. Keep priors in `health.md` (which `.gitignore` excludes by default), never in any outbound email, and never in a public fork.
+
+---
+
+## Earned praise / the positive-signal system
+
+The surfaces don't only warn — they **encourage when things go right.** But praise is rationed as carefully as the alerts, because empty "good job" erodes the warnings: if the system congratulates you for nothing, you stop trusting it when it raises a real flag.
+
+So praise must clear a real bar:
+
+- **A genuine milestone** — a streak hit, a target met, a sustained good trend (not a single good day).
+- **Specific, not generic.** Name the behavior *and* its payoff ("eight straight days hitting your Zone-2 target — that's the work that drops your resting HR floor"). Never a bare "nice job."
+- **Scarce.** At most **one** praise line per email, and never an alert and praise in the same surface. Daily praise should be rarer still — roughly once a week at most.
+
+**The all-green month.** When a whole month clears the bar with nothing to fix, the monthly memo should *not* produce a wall of green checkmarks — that's just noise in a different color. Instead it **pivots from metrics to purpose**: it points at your health north-star — the reason the training matters to you (the activity you want to keep doing for decades, the people you want to keep pace with, the life you're training for) — rather than reporting another good number. A clean month is exactly when to reconnect the work to the why.
+
+This is referenced operationally in [`briefings/morning-brief.md`](../briefings/morning-brief.md) (Step 8), [`briefings/weekly-review.md`](../briefings/weekly-review.md), and [`briefings/monthly-health.md`](../briefings/monthly-health.md).

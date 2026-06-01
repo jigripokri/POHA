@@ -117,10 +117,10 @@ This ordering matters because when the exocortex has to decide where to look fir
 Every briefing pings every connected source in parallel. The recipe:
 
 ```
-For each source, run a minimal read:
+For each source, run a minimal read IN PARALLEL:
 - Gmail: search "is:unread" with limit 1
 - Calendar: list events in next 1 hour
-- WhatsApp: list_contacts with limit 1
+- WhatsApp: see the liveness assertion below — a plain ping isn't enough
 - Tasks: navigate to tasks.google.com, screenshot
 - Health: connection-status / profile ping on the health MCP
 - Monarch: check_auth_status
@@ -131,6 +131,21 @@ Never block the briefing — degraded is better than missing.
 ```
 
 This pattern saved us many times. Connectors drop authentication, the bridge restarts, the user revokes a token. Without the health check, briefings silently fail and you don't know why.
+
+### WhatsApp bridge-liveness assertion (special case)
+
+A WhatsApp scan that returns **zero messages** is ambiguous: it could be a quiet day, or a silently disconnected bridge. The two look identical, and the second one is dangerous — the briefing reads "clean" when it actually saw nothing.
+
+So WhatsApp's Step 0.5 check is **not** a simple ping. Assert both:
+
+1. **Connected** — the bridge reports a connected/registered session (not "logged out").
+2. **Recent traffic** — the store has received at least one message (any chat) in the last 24h.
+
+If either fails, mark WhatsApp DOWN and treat any empty scan as a **bridge-down signal**, not silence. See [`whatsapp-gotchas.md`](./whatsapp-gotchas.md#7-bridge-liveness--dont-trust-an-empty-scan).
+
+### Health is non-blocking and noise-suppressed
+
+Health is the lowest-priority source. A single down-day is **silent** — no banner. Only after **multiple consecutive down-days** does Step 0.5 raise `⚠️ DEGRADED: health`, so a transient blip never generates noise. Health never blocks or delays a briefing.
 
 ---
 

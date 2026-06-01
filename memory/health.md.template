@@ -117,6 +117,17 @@ Patterns to watch in your own health based on family history:
 
 ---
 
+## Genetic risk priors (optional)
+
+> **Optional layer.** Fill in ONLY if you have genome data and want the health surfaces to reason against it. Store **plain-language risk priors only** — which signals matter most for you and why. **Never paste raw reports, variant IDs, or clinical findings here.** See [`docs/health-system.md`](../docs/health-system.md) > the genetic-context layer.
+
+Surfaces read these on every health pass and cross-reference them against live wearable data (e.g. event-triggered protocols around travel, weighted interpretation of a drift).
+
+- {{e.g. "Elevated clotting risk → movement + hydration protocol around flights > ~6h; watch recovery for a few days after."}}
+- {{e.g. "Lipid-sensitive → weight up + training down matters more than baseline; flag earlier."}}
+
+---
+
 ## Open health decisions
 
 | Decision | Status | Notes |
