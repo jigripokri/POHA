@@ -14,8 +14,8 @@ You are running the commitment-to-calendar sweep for {{USER_NAME}}. Don't email 
 
 ## Step 1 — Memory load
 
-Read memory/commitments.md.
-Filter: status = `CALENDAR NEEDED`.
+Follow the **Open** steps in [`_memory-contract.md`](./_memory-contract.md): read `memory/INDEX.md` first, then only what this briefing's row in `INDEX > Read plan` marks `full`; everything else by section or grep. For this briefing: memory/INDEX.md, then only the open sections — `python3 tools/memory_maint.py section memory/commitments.md "Open — I Said I Would"` (and "Open — They Said They Would").
+Filter: State = `CALENDAR NEEDED` (or `PENDING` with a Due date). **Skip CHRONIC rows entirely** — they never get routed or auto-scheduled; the weekly decides them. No candidates is a correct outcome: write the run note and stop.
 
 ## Step 2 — Read Calendar
 
@@ -67,7 +67,9 @@ Include reply links: `mailto:` with `EXO_DECIDE::<slug>::<option>` subjects.
 
 ## Step 6 — Update memory
 
-Write status changes to commitments.md.
+Edit each row in place (State, Touched = today, Note = `cal <date time>` for created events) and write one journal `calendar` line per event created (≤4 per run).
+
+Then the **Close** steps in [`_memory-contract.md`](./_memory-contract.md): save the briefing, update line-3 headers, `memory_maint.py run-note`, `memory_maint.py all --job c2c`.
 
 Confirm with: "<N> events created, <M> parked to GSD, <K> flagged for your call."
 ```

@@ -18,8 +18,9 @@ Search Gmail for emails with subject starting `EXO_DONE` received in the last 36
 For each match:
 - Extract the slug after `EXO_DONE::`
 - Open memory/commitments.md
-- Find the matching commitment (slug match, then fuzzy match on title)
-- Update its status to DONE with today's date
+- Find the matching row (exact match on the `Slug` column, then fuzzy on `What`)
+- Set State DONE, Touched = today, move the row to `Closed (last 7 days)`, write one journal `closed` line
+- `EXO_DONE::keep-<slug>` / `accept-<slug>` are answers to the weekly CHRONIC question (see `_memory-contract.md`)
 - Archive the signal email
 - If no match found, note it for the email's "Loose Ends" section
 
@@ -39,11 +40,12 @@ Google Health is the lowest-priority source — never block or delay the brief o
 
 ## Step 1 — Memory load
 
-Read in this order:
-1. memory/people.md (relationship context)
-2. memory/commitments.md (open promises)
-3. memory/life.md (priorities + recurring calendar)
-4. memory/insights.md (lenses — don't surface, but apply)
+Follow the **Open** steps in [`_memory-contract.md`](./_memory-contract.md): read `memory/INDEX.md` first, then only what this briefing's row in `INDEX > Read plan` marks `full`; everything else by section or grep. For this briefing:
+1. memory/INDEX.md (full — commitment ages, staleness, missed runs)
+2. memory/commitments.md (full — the worklist)
+3. memory/people.md → `python3 tools/memory_maint.py section memory/people.md "<your core-family heading>"`; other people by grep when they surface
+4. memory/insights.md → grep by subject tag only when writing the Insight section (`grep -n "subject: #tag" memory/insights.md`)
+5. Yesterday + today in the journal: `python3 tools/memory_maint.py lookback --days 1`
 
 DO NOT read memory/private/carry-on.md.
 
@@ -141,10 +143,13 @@ Slug rules: lowercase, hyphens, max 40 chars, derived from item title.
 
 ## Step 10 — Update memory
 
-For each new commitment detected, add to commitments.md with appropriate status.
-For each insight worth keeping, add to insights.md with today's date.
-For each person who surfaced with new context, update people.md.
-For each commitment marked DONE in Step 0, move it to the Done section.
+- New commitment → one new row in commitments.md (`next-id C`, State `CALENDAR NEEDED` or `PENDING`) + one journal `opened` line.
+- Closed, changed or decided → edit the row in place + one journal line. CHRONIC rows get one compact line in the email, nothing else.
+- People: core-family facts only into people.md (≤400 chars); everything else about people is a journal `fact` line.
+- Insights: the morning never creates a lens. If today's Insight section is an instance of an active lens, write it fresh (no IDs in the email) and bump that lens's `evidence:` + one journal `evidence` line.
+- Journal cap: 8 lines. "Still open" is not an event.
+
+Then the **Close** steps in [`_memory-contract.md`](./_memory-contract.md): save the briefing, update line-3 headers, `memory_maint.py run-note`, `memory_maint.py all --job morning`.
 
 ## Step 11 — Send
 

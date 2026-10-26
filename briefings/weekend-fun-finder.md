@@ -74,7 +74,9 @@ Each event gets a `mailto:` "✅ Let's do this" link to capture commitment.
 
 ## Step 6 — Update memory
 
-If a "let's do this" comes in via Step 0 of next morning's brief, add the event to commitments.md as CALENDAR NEEDED.
+If a "let's do this" comes in via Step 0 of next morning's brief, add the event as a new row in commitments.md (`next-id C`, State CALENDAR NEEDED).
+Past picks for de-duplication: `python3 tools/memory_maint.py lookback --tag "#weekend" --days 28`. Write one journal `sent` line tagged #weekend with the top family pick.
+Then the **Close** steps in [`_memory-contract.md`](./_memory-contract.md): save the briefing, update line-3 headers, `memory_maint.py run-note`, `memory_maint.py all --job weekend`.
 ```
 
 ---
