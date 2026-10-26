@@ -1,5 +1,7 @@
 # People
 
+*Last updated: {{YYYY-MM-DD}} (manual)*  <!-- line 3: keep this header current; memory_maint.py measures staleness from it -->
+
 Relationship context. Who matters, what's open with them, what's coming up.
 
 > **How to populate:** Start with the 15–20 people you interact with most. For each, capture: relationship, where they live, last contact, open thread, anything coming up. Update during weekly review. Apply the 3-week rule — if someone hasn't surfaced in 3 weeks, archive them (you can always re-add later).

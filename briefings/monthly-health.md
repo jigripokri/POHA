@@ -19,7 +19,7 @@ Standard.
 Standard. Google Health is the source here — if it's been down for multiple consecutive days, note it and write the memo from health.md's stored trends instead of failing.
 
 ## Step 1 — Memory load
-Read memory/health.md in full — including the Wearable data sections (rolling weekly/monthly trends), active concerns, doctors, family history, and any Genetic risk priors.
+Follow the **Open** steps in [`_memory-contract.md`](./_memory-contract.md): read `memory/INDEX.md` first, then only what this briefing's row in `INDEX > Read plan` marks `full`; everything else by section or grep. Then read memory/health.md in full — including the Wearable data sections (rolling weekly/monthly trends), active concerns, doctors, family history, and any Genetic risk priors.
 
 ## Step 2 — Pull the month's trajectory
 From the Google Health MCP, pull the monthly rollup directly (no sync script):
@@ -51,7 +51,8 @@ Subject: 🩺 Monthly Health Memo — <month, year>
 
 ## Step 6 — Update memory
 Write the month's trajectory into health.md > Wearable data > Monthly trajectory.
-Add any new active concern that emerged. Add a genuine insight (if any) to insights.md.
+Add any new active concern that emerged. Insight: the novelty gate exactly as the monthly finance sweep (subjects #health / #sleep) — one new lens max, else `evidence: +1`. Journal: ≤3 `fact` lines + one `review` entry tagged #health. Update health.md's line-3 header.
+Then the **Close** steps in [`_memory-contract.md`](./_memory-contract.md): save the briefing, update line-3 headers, `memory_maint.py run-note`, `memory_maint.py all --job health`.
 
 Confirm with: "Monthly health memo sent. <N> action items. Pre-bloodwork section: <included/omitted>."
 ```

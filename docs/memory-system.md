@@ -1,218 +1,193 @@
 # The Memory System
 
-Why plain markdown beats vector databases for personal AI.
+Why plain markdown beats vector databases for personal AI, and why plain markdown still needs a garbage collector.
 
 ---
 
 ## The architecture in one sentence
 
-Seven markdown files. Read at the start of every task. Updated at the end of every briefing. Pruned weekly. Gitignored by default.
+Plain markdown, in two kinds of files that never mix: **small curated files** that describe the present (each with a byte budget, an owner and a max age), and **append-only monthly logs** that record what happened. A stdlib Python script enforces the difference after every briefing. Everything stays gitignored.
 
-That's it. There is no database. There is no vector store. There is no RAG. The agent just reads files.
-
----
-
-## Why this works (and why fancier doesn't)
-
-When this repo started, the default architecture for "personal AI memory" was:
-
-1. Embed every input as a vector
-2. Store in a vector DB
-3. Retrieve via similarity search at query time
-4. Pass top-K chunks into the context
-
-This sounds great. It's wrong for this problem. Three reasons:
-
-**1. The corpus is too small.**
-A real person's memory file system, after a year of use, is ~50KB across seven files. Modern Claude windows hold 200K+ tokens. There is no retrieval problem. Just load the files.
-
-**2. Vector search makes you stupid.**
-Vectors retrieve by *semantic similarity*. But memory retrieval should often be *exact* — what's the status of commitment X? When did I last talk to person Y? Vectors are bad at this. Markdown grep is perfect at this.
-
-**3. The state has to be auditable.**
-A vector DB is opaque. If the agent gets something wrong about your life, you can't open the DB and fix it. With markdown, you open the file in any editor and rewrite. The exocortex's memory should be inspectable and correctable by you in 30 seconds.
+There is still no database. There is no vector store. There is no RAG. The agent just reads files. It reads fewer of them, and they stay small.
 
 ---
 
-## The seven files
+## Why plain markdown (unchanged since v0.1)
 
-### Core four (always loaded)
+When this repo started, the default architecture for "personal AI memory" was: embed every input as a vector, store it in a vector DB, retrieve via similarity search, and pass the top-K chunks into context. That's wrong for this problem:
 
-| File | Purpose | Read frequency |
-|------|---------|----------------|
-| `people.md` | Relationship context | Every briefing |
-| `commitments.md` | Open promises | Every briefing |
-| `life.md` | Goals & priorities | Every briefing |
-| `insights.md` | Strategic lenses | Every briefing |
+**1. The corpus is small.** A real person's curated state fits comfortably in a context window. There's no retrieval problem if you keep it that way.
 
-### Domain three (loaded on demand)
+**2. Vector search makes you stupid.** Memory retrieval should often be *exact*: what's the status of commitment X? When did I last talk to Y? Vectors are bad at this. Grep is perfect at it.
 
-| File | Purpose | Read frequency |
-|------|---------|----------------|
-| `finances.md` | Money state | Only when finance question or monthly sweep |
-| `health.md` | Health state | Only when health question |
-| `<person>.md` *(optional)* | Per-person deep context | When that person is the subject |
-
-### Private (gated)
-
-| File | Purpose | Read frequency |
-|------|---------|----------------|
-| `private/carry-on.md` | Sensitive context | NEVER automatic. Only when explicitly invoked. |
+**3. State has to be auditable.** If the agent gets something wrong about your life, you open the file and fix it in 30 seconds. Try that with a vector DB.
 
 ---
 
-## Read at start, update at end
+## Why v0.3 added rules (what went wrong in production)
 
-Every briefing follows this pattern:
+The v0.1 rule was "read everything at the start, write back at the end, prune weekly." After six months of real use on a busy life, that drifted in four predictable ways:
+
+1. **One file played two roles.** Every scheduled run appended a "here's what I did" paragraph to `commitments.md`. Within months the worklist was ~80% run log and a very large file, and every briefing paid for it before doing any work. Runs started running out of room, and the optional last step ("add an insight if something surfaced") was the first thing dropped.
+2. **Insights had no lifecycle.** The same stuck item generated dozens of near-identical "insights." Numbers got reused. Old entries were cited as "precedent" to justify not acting. New ones went to the bottom where nobody read them, so the file *looked* stale even though it was growing.
+3. **The 3-week rule was flagged, not done.** Pruning depended on the weekly review remembering to do it. Week after week, it didn't.
+4. **Curated files rotted silently.** "Current quarter" sections still named a quarter from months ago. Nothing said which file was stale, or whose job it was to fix it.
+
+None of this is a model problem. It's a missing-mechanism problem. **The fix is boring on purpose: budgets that are numbers, enforced by a script, not sentences in a prompt.**
+
+---
+
+## The two kinds of files
+
+### Curated state: small, rewritten in place, budgeted
+
+| File | What it is | Budget | Owner · max age |
+|------|------------|--------|-----------------|
+| `commitments.md` | The worklist: ≤3 pinned projects (current state only) + open rows + `Closed (last 7 days)`. Permanent `C-NNNN` IDs. | 24 KB | weekly · 3 d |
+| `insights.md` | ≤25 **active lenses**, ≤3 per subject, newest first. Permanent `I-NNNN` IDs. | 20 KB | weekly · 10 d |
+| `people.md` | Relationship context, open threads. | 24 KB | weekly · 28 d |
+| `life.md` | Goals, priorities, the current quarter. | 16 KB | weekly · 35 d |
+| `finances.md` | Money state. Read only for money questions. | 32 KB | finance · 40 d |
+| `health.md` | Health state. Read only for health questions. | 48 KB | health · 40 d |
+| `private/carry-on.md` | **Strictly gated.** Never read automatically, never indexed, never touched by the script. | — | — |
+
+Budgets, owners and max ages live in [`tools/memory_contract.json`](../tools/memory_contract.json). Change them there. Add a file there (a per-person file, `weekend-prefs.md`) and the script starts measuring it.
+
+Every curated file carries one header on line 3, updated by whoever changes it:
 
 ```
-Step 1: Read memory files (the "load")
-Steps 2..N: Do the work (scan inputs, compose output)
-Step N+1: Write memory updates (the "save")
+*Last updated: 2026-05-17 (weekly)*
 ```
 
-The "save" is the most important part. If briefings don't write back, the exocortex doesn't actually learn anything.
+That header is the **only** per-run mark a curated file gets. No run notes, no "STATUS <date>" lines, no day counters.
 
-What gets written:
+### Append-only history: time-partitioned, never edited
 
-- **New commitments** → `commitments.md` under "I Said I Would" or "They Said They Would"
-- **Completed commitments** → moved to "Done" section
-- **New relationship context** → `people.md` updated
-- **New insights** → `insights.md` (sparingly — quality > quantity)
-- **Pattern changes** → `life.md`
+| Path | What it is |
+|------|------------|
+| `memory/journal/YYYY-MM.md` | **The lookback ledger.** One line per *event* (opened · closed · state · decision · fact · calendar · sent · incident · evidence · insight · review). Steady state ("still open", "Day 46") is not an event and is never written. |
+| `logs/run-notes/YYYY-MM.md` | One ≤1,500-char entry per briefing run: result, source health, what it read, what it wrote, its insight decision. Operational, not memory. |
+| `memory/archive/**` | Closed commitments by month, retired insights by quarter (full original text), stale sections cut from curated files. Appended by the script. |
+| `logs/briefings/YYYY-MM-DD-<briefing>.md` | The content of every sent briefing: "what did the exocortex tell me?" |
+| `memory/INDEX.md` | **Generated** after every run (≤6 KB). Read first by every briefing. |
+
+`memory/` and `logs/` are both gitignored. None of this ever reaches GitHub.
 
 ---
 
-## The 3-week rule
+## The rules that keep it tight
 
-Memory grows. If you don't prune, performance degrades. The 3-week rule:
+**Read INDEX first, then only what you need.** Each briefing's row in `INDEX > Read plan` says which files it reads in full, which by section (`memory_maint.py section <file> "<heading>"`), and which only by grep. A daily briefing reads tens of KB, not everything. The weekly review is the audit and reads more.
 
-> If an item in memory hasn't been referenced, updated, or relevant in 3 weeks, archive or remove it during weekly review.
+**Transitions are events; steady state is not.** Opening, closing, a state change, a decision, a new fact → one journal line, written through the script so the format can't drift. "Still open, re-verified" → nothing.
 
-The weekly review briefing does this automatically. It flags candidates for archive; you approve via the email's mailto: links.
+**One row per item, forever.** A commitment is edited in place (State, Due, Touched, Note). Closing means setting State and moving the row to `Closed (last 7 days)`; the script archives it a week later.
 
-What this prevents:
+**CHRONIC is a state, not a nag.** The script flips any row open 21+ days to `CHRONIC`. Chronic rows get one compact line in briefings and one weekly question: **Keep / Accept and stop tracking / Reframe**. This is the 3-week rule, now automatic, and it ends the "flagged for the 11th week" pattern.
 
-- `people.md` growing to include everyone you've ever met
-- `commitments.md` filling with stale "I'll get to it eventually" items
-- `life.md` listing goals you've quietly given up on
+**Insights have a lifecycle.**
+- A new lens only if the deterministic novelty gate passes (`memory_maint.py novelty …`, exit 0) **and** its subject has fewer than 3 active lenses.
+- Same pattern again → `evidence: N+1` + a journal line, never a second entry.
+- Retire or supersede by editing the metadata line; the script moves the entry, full text intact, to the quarterly archive.
+- The evening decides **every night**: new lens, evidence on an existing one, or `none — <reason>`. Three `none`s in a row is a weekly flag.
+- A lens frames thinking and picks a lever. It is never a reason to skip a rule.
 
-What this enables:
+**Freshness has an owner.** INDEX marks each curated file 🟠 at 75% of its max age and 🔴 past it. The owner refreshes it, or writes `*Last updated: … (weekly — verified unchanged)*` after actually re-reading it. The weekly review is the enforcement point (`--enforce` turns weekly-owned 🔴 files into violations).
 
-- Memory load (Step 1 of every briefing) stays fast
-- Action items in briefings remain high-signal
-- You actually trust the exocortex's memory because it's current
+The shared, copy-paste version of these rules for briefings is [`briefings/_memory-contract.md`](../briefings/_memory-contract.md).
+
+---
+
+## `tools/memory_maint.py`
+
+One file, Python 3.9+, stdlib only. Never reads or writes `memory/private/`. Never deletes anything: everything leaves a file by being appended somewhere else first. Every rewrite is atomic and backed up to `logs/maint/backup/<weekday>/`.
+
+| Command | What it does |
+|---------|--------------|
+| `all --job <briefing>` | The close step of every briefing: check → rotate → journal-diff → index. |
+| `check [--enforce]` | Budgets, freshness, schemas (commitments/insights/journal), forbidden patterns (run notes, day counters, STATUS lines), missed runs, private-path references. |
+| `rotate` | CHRONIC flips at 21 days, closed rows → monthly archive after 7 days, `status:`-marked lenses → quarterly archive (merging evidence into the survivor). |
+| `journal-diff` | Compares the worklist to the last snapshot and writes `(auto)` journal lines for any change a run forgot to log. The ledger stays complete even when a run is sloppy. |
+| `index` | Regenerates `memory/INDEX.md`. |
+| `section <file> "<heading>"` | Prints one heading's block, so briefings never full-read a big file for one section. |
+| `lookback …` | Queries the journal (`--tag`, `--id`, `--event`, `--grep`, `--month`, `--days`; `--archive` and `--run-notes` widen it). |
+| `journal …` | Appends one validated journal line. |
+| `run-note …` | Appends one run note (refuses a morning/evening/weekly note without an insight decision). |
+| `novelty --subject "#tag" --text "…"` | The deterministic near-duplicate gate for a candidate lens (exit 3 = near-duplicate). |
+| `next-id C\|I` | Next free commitment or insight ID, reserved for 6 h. |
+| `verify` | Line accounting between a file and where its content moved (used when cutting stale sections). |
+
+Exit codes: `0` clean · `1` warnings · `2` violations · `3` novelty near-duplicate · `4` fatal. Tests: `python3 -m unittest discover tools/tests`.
+
+---
+
+## Lookback recipes
+
+```bash
+# What was going on with the tracked project in July?
+python3 tools/memory_maint.py lookback --tag "#tracked-project" --month 2026-07
+
+# The whole life of one commitment, every event
+python3 tools/memory_maint.py lookback --id C-0042
+
+# When did we decide X, and what did we decide?
+python3 tools/memory_maint.py lookback --event decision --grep "move" --days 365   # --grep is a case-insensitive regex
+
+# How did the week of May 12–18 go?
+python3 tools/memory_maint.py lookback --event review --from 2026-05-12 --to 2026-05-20
+python3 tools/memory_maint.py lookback --event closed,opened --from 2026-05-12 --to 2026-05-18 --count
+
+# Did a briefing miss, and what did it read and write that day?
+python3 tools/memory_maint.py lookback --run-notes --job evening --from 2026-05-21 --to 2026-05-21
+
+# Pure grep works too, if the script is ever broken
+grep -h "· decision ·" memory/journal/*.md
+```
 
 ---
 
 ## What to save vs. not save
 
-**Save it** if it will matter in a week or more:
+**Save it** if it will matter in a week or more: decisions and their reasoning, new facts about people and plans, active deadlines, promises made in either direction, non-obvious patterns (as lenses or evidence). **Save to the journal by default**; promote to a curated file only what describes *current state*.
 
-- Major decisions and their reasoning
-- Recurring relationships (people who appear regularly in your life)
-- Active deadlines
-- Promises you've made or been made
-- Non-obvious patterns you've noticed
-- Things you'd want to remember but won't if you don't write them down
+**Don't save** completed one-off tasks (the journal `closed` line is enough), social chatter, anything re-derivable by re-scanning messages/email/calendar, admin noise, run mechanics (those are run notes), or day counts.
 
-**Don't save it** if it's:
-
-- A one-off task you've already done
-- Social chatter ("had a great call with X")
-- Anything you can re-derive by re-scanning WhatsApp/Gmail/Calendar
-- Admin noise (every receipt, every confirmation email)
-
-A good gut check: *If I needed this in a year, would I want it preserved?* If no, don't save it.
+Gut check: *if I needed this in a year, would I want it preserved?* If yes and it's history → journal. If yes and it's "how things are now" → curated file.
 
 ---
 
-## Memory hygiene tips
+## Upgrading from v0.2
 
-**Edit by hand sometimes.**
-The exocortex updates memory automatically, but you should occasionally open the files yourself and prune. It catches things the agent missed.
+1. Pull this release and copy the new `tools/` folder in. Set `"adopted"` in `tools/memory_contract.json` to today.
+2. **Move run logs out of `commitments.md`.** Any "Evening note / Morning note / ran the brief" paragraphs go to `logs/run-notes/archive/` (cut and paste them; they're history, not memory).
+3. **Convert commitments rows** to the 9-column format in `memory/commitments.md.template` (`ID | Slug | What | Who | Due | State | Opened | Touched | Note`). Close or drop anything that's clearly dead; the archive keeps it. Keep the `Note` to current state only.
+4. **Restructure insights** into the lens format in `memory/insights.md.template`: newest first, ≤25 active, ≤3 per subject. Fold near-duplicates into one lens with an evidence count. Move the rest, full text, to `memory/archive/insights/YYYY-QN.md` with `status: retired`.
+5. Add the line-3 `*Last updated: YYYY-MM-DD (<briefing>)*` header to every curated file.
+6. Run `python3 tools/memory_maint.py all --job manual`. Fix every violation it reports; warnings (stale files) are the weekly review's to-do list.
+7. Update your scheduled briefings to the versions in `briefings/` (they now reference `briefings/_memory-contract.md`).
 
-**Use the templates as scaffolding, not as cages.**
-The structure in the templates is a starting point. If a section doesn't apply to you, delete it. If you need a new section, add it.
-
-**Don't aim for completeness.**
-The 20/80 rule applies. The first 20% of memory captures 80% of the value. Don't spend 3 hours on `people.md` trying to document every relationship. Get the top 15 right.
-
-**Versioning is your friend.**
-Even though `memory/` is gitignored by default, consider keeping a *private* git repo of your memory files (separate from this public repo). Version history saves you when you accidentally delete something.
+Expect the first `check` on an old tree to report many violations. That's the point: it shows you exactly where the drift is.
 
 ---
 
-## The case for plain text
+## Failure modes it now catches
 
-Pretty much every nice thing about this system comes from "it's just markdown":
+- **A briefing writes a run note into a memory file again** → `check` fails (exit 2) at the end of that same run, and the next briefing sees it in INDEX.
+- **A row is deleted instead of archived** → `journal-diff` reports "row vanished" and logs an incident line.
+- **A briefing stops running** → INDEX's "Missed" line lists every expected slot with no run note; three in a row is a violation.
+- **A file nobody owns goes stale** → it turns 🔴 with an owner's name next to it.
+- **The same insight keeps getting rewritten** → the novelty gate returns exit 3 and points at the lens to bump instead.
 
-- ✅ You can edit it in any editor (VS Code, vim, Notes app, anything)
-- ✅ You can grep it
-- ✅ You can version-control it
-- ✅ You can diff it
-- ✅ You can read it without the agent
-- ✅ You can take it with you if you leave Claude (everything is in human-readable files)
-- ✅ Models keep improving but markdown stays markdown — no migration
-
-Compare to a vector DB:
-
-- ❌ You can't read it
-- ❌ You can't edit a single record cleanly
-- ❌ Migrating models often means re-embedding everything
-- ❌ The state is invisible to you
-
-Plain markdown wins. It's not flashy. It's right.
-
----
-
-## Failure modes
-
-**Memory contradicts the agent's other inputs.**
-e.g. people.md says X lives in Tokyo, but a recent WhatsApp message says they just moved to Berlin. The agent should: notice the contradiction, update memory with the new info, flag the change in the next briefing.
-
-**Memory is overspecified and breaks naturally.**
-e.g. you wrote "Mom calls every Sunday at 7pm" but it's been a Saturday morning thing for a month now. The 3-week rule catches this — facts that don't match observed reality get questioned during weekly review.
-
-**Memory contains real errors.**
-The agent gets your sibling's name wrong. You correct it once in the file. Done. (Try fixing a vector DB error.)
+Failure modes it can't catch, so you still should: memory that contradicts a newer input (update it and flag the change), and facts that were never true (fix them by hand, which is the whole point of plain text).
 
 ---
 
 ## Extension: per-person memory files
 
-If someone in your life needs ongoing detailed context — a child you're parenting through a school transition, an aging parent with multiple health issues, a high-touch direct report, a co-founder — create `memory/<name>.md` for them.
-
-Structure (suggested):
-
-```markdown
-# <Name>
-
-## Profile
-Age, location, role/relationship.
-
-## What's current
-What's happening with them right now.
-
-## Recurring themes
-Patterns you want to remember.
-
-## History
-Important past events.
-
-## Open threads
-Same format as commitments.md.
-
-## Notes
-Anything else.
-```
-
-Read this file when they're the subject of conversation. Update after meaningful interactions.
-
-This is the most underrated extension. Most people need ~3 of these. Common picks: a young child going through a school transition, an aging parent with health complexity, a co-founder, a direct report you're coaching.
+For someone who needs ongoing detailed context (a child through a school transition, an aging parent with health complexity, a co-founder), create `memory/<name>.md` and add it to `tools/memory_contract.json` with a budget, an owner and a max age, so it can't silently rot. Suggested sections: Profile · What's current · Recurring themes · History · Open threads (as commitment IDs). Most people need about three.
 
 ---
 
 ## TL;DR
 
-Plain markdown. Read at start. Write at end. Prune weekly. Don't overthink it.
+Plain markdown. Two kinds of files: small curated state and append-only history. Numbers, not adjectives: budgets, owners, max ages. A script enforces them after every run. Read the index first. Log events, not status. One row per item. One lens per pattern.

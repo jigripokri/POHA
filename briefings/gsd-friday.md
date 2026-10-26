@@ -14,7 +14,7 @@ You are building the Friday GSD agenda for {{USER_NAME}}.
 
 ## Step 1 — Memory load
 
-memory/commitments.md.
+Follow the **Open** steps in [`_memory-contract.md`](./_memory-contract.md): read `memory/INDEX.md` first, then only what this briefing's row in `INDEX > Read plan` marks `full`; everything else by section or grep. For this briefing: memory/INDEX.md and the open sections of memory/commitments.md (`memory_maint.py section`). CHRONIC rows go on the list once, in their own "Chronic — decide, don't do" group, without re-reasoning.
 
 ## Step 2 — Source the to-do pool
 
@@ -75,7 +75,9 @@ Body: the agenda + a `mailto:` link for each item.
 
 ## Step 7 — Update memory
 
-For each item picked up from commitments.md, mark `IN PROGRESS` for today.
+For each item picked up from commitments.md, set State `IN PROGRESS` (edit in place). One journal `sent` line: list size, overflow count.
+
+Then the **Close** steps in [`_memory-contract.md`](./_memory-contract.md): save the briefing, update line-3 headers, `memory_maint.py run-note`, `memory_maint.py all --job gsd`.
 ```
 
 ---

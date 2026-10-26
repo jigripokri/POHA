@@ -1,47 +1,28 @@
-# Insights
+# Insights — Memory
 
-Non-obvious patterns. Strategic truths. Wildcards. Things worth re-reading in a year.
+*Last updated: {{YYYY-MM-DD}} (manual)*
 
-> **What goes here:** lenses, not action items. Insights that, if you forgot them, would cost you something subtle but important. The exocortex adds to this file whenever something genuinely non-obvious surfaces during briefings or conversations. You should add to it too — whenever you have one of those "huh, that's interesting" moments, write it down.
+> **Active lenses only** (Memory v2): ≤25 entries, ≤3 per primary subject, newest first. Each is a pattern worth re-reading in a year — not an observation about today, not a todo.
+> - **Same pattern again → `evidence: N+1`** plus one journal `evidence` line. Never a second entry saying the same thing.
+> - **New lens only if the novelty gate passes:** `python3 tools/memory_maint.py novelty --subject "#tag" --text "<title>. <body>"` (exit 0 = novel, exit 3 = near-duplicate of the lens it names). Subject already at 3? Supersede one first.
+> - **Retire or supersede by metadata:** add `status: retired` or `status: superseded · superseded-by: I-NNNN` to the metadata line. The script moves the entry, full text intact, to `memory/archive/insights/YYYY-QN.md`. Never cut and paste between files.
+> - Lenses help you frame and pick a lever. They are never a reason to skip a rule or to not log an event.
+> - **3-year test:** if you wouldn't still find it useful in 3 years, it doesn't belong here.
 
-> **What does NOT go here:** todos, reminders, things you might do this week. Those go in `commitments.md` or `life.md`. Insights are the *meta* layer.
+## Active
 
-> **3-year test:** if you wouldn't still find this useful in 3 years, don't put it here.
+<!--
+Format (exactly):
 
----
+### I-0001 · {{Short, memorable title, ≤110 chars}}
+*Added {{YYYY-MM-DD}} ({{briefing or manual}}) · subject: #tag[, #tag2] · evidence: 1 · aliases: —*
+{{2–4 sentences, ≤600 chars: the pattern, the counterintuitive part, the obvious-but-wrong view.}}
+Lens: {{one sentence on how to look at future situations.}}
 
-## How to add an insight
+Example (delete before saving):
 
-```
-### {{Short, memorable name for the insight}}
-
-{{2–4 sentences. What's the pattern? What's the counterintuitive part? What would the obvious-but-wrong view be?}}
-
-— {{date added}}
-```
-
----
-
-## Insights
-
-<!-- Example (delete before saving):
-
-### The 30% rule
-
-When you find yourself spending 30%+ of mental cycles on a decision over a week, that's the signal it's actually the most important thing right now — even if you've been telling yourself it's a distraction. Honor the obsession.
-
-— 2026-01-12
-
-### Parents call sister, not me, when something's wrong
-
-Pattern observed over 3 years: when there's a real problem, they route through her first. This isn't because I'm not trusted — it's because they want to consult before deciding what to tell me. So when she calls unprompted, it's almost always relaying something. Treat her unprompted calls as high-priority.
-
-— 2026-02-08
-
-### Money decisions feel scarier than they are; relationship decisions feel safer than they are
-
-The reverse-asymmetry of life: I deliberate for weeks on a $20K decision that won't matter in 5 years, and snap-decide on a relationship moment that compounds for decades. Recalibrate.
-
-— 2026-03-15
-
+### I-0002 · Their unprompted calls are almost always relays
+*Added 2026-02-08 (weekly) · subject: #sibling, #parents · evidence: 4 · aliases: —*
+When there's a real problem, the parents route through the sibling first — not out of distrust, but to decide what to say. So an unprompted call from the sibling is usually carrying something.
+Lens: treat an unprompted sibling call as high priority and ask "what are you relaying?"
 -->

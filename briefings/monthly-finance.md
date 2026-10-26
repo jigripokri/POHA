@@ -14,7 +14,7 @@ You are running the monthly financial sweep for {{USER_NAME}}. This briefing is 
 
 ## Step 1 — Memory load
 
-Read memory/finances.md.
+Follow the **Open** steps in [`_memory-contract.md`](./_memory-contract.md): read `memory/INDEX.md` first, then only what this briefing's row in `INDEX > Read plan` marks `full`; everything else by section or grep. For this briefing: memory/INDEX.md and memory/finances.md in full. Past money insights: `grep -n -E "subject: #(money|fire|subs)" memory/insights.md` and the same grep on this quarter's `memory/archive/insights/` file.
 
 ## Step 2 — Pull live data
 
@@ -95,8 +95,10 @@ Sections:
 
 Update finances.md > Snapshot with new NW.
 Update finances.md > Credit cards if any changes (new cards, cancellations).
-Add any new insights to insights.md.
-Add cancel-this-sub action items to commitments.md.
+Insight: run the novelty gate on the best candidate (`memory_maint.py novelty --subject "#money" …`). Novel and subject below cap → one new lens; near-duplicate → `evidence: +1`. Max one new lens per run.
+Add cancel-this-sub action items as new rows in commitments.md (`next-id C`).
+Journal: ≤6 `fact` lines (net worth, spend status, new subscriptions) + one `review` entry tagged #money.
+Then the **Close** steps in [`_memory-contract.md`](./_memory-contract.md): save the briefing, update line-3 headers, `memory_maint.py run-note`, `memory_maint.py all --job finance`.
 
 Confirm with: "Financial sweep complete. NW: $X. <N> action items. <M> subscriptions flagged."
 ```

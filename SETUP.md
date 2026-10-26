@@ -10,6 +10,7 @@ End-to-end walkthrough. Plan ~3 hours for honest setup, ~30 minutes for a minima
 - A Claude Pro or Max subscription ([signup](https://claude.ai))
 - A primary email account you can send to yourself (Gmail recommended — the acknowledgment loop is built around it)
 - Calendar, messaging apps, and tasks tools you want connected
+- Python 3.9+ (stdlib only, nothing to `pip install`). It runs `tools/memory_maint.py`, which keeps memory from bloating. Check with `python3 --version`; on Windows the command may be `python` or `py`.
 
 ---
 
@@ -125,7 +126,7 @@ This is the part that takes time. You're going to spend 90 minutes telling Claud
 
 Tell Claude:
 
-> *"Read CLAUDE.md and ARCHITECTURE.md. Then walk me through filling in the seven memory files. Start with people.md — ask me questions to populate it. Move on to the next file when I say so."*
+> *"Read CLAUDE.md and ARCHITECTURE.md. Then walk me through filling in the memory files. Start with people.md — ask me questions to populate it. Move on to the next file when I say so."*
 
 Claude will ask you questions like:
 
@@ -147,6 +148,21 @@ Files to populate, in order:
 7. `memory/private/carry-on.md` — leave empty for now; load only when needed
 
 Each template has section headers and an example entry. Don't aim for completeness on day one — aim for the 20% that captures 80% of what matters.
+
+Then switch on the memory guardrails (5 minutes):
+
+1. Copy each `memory/*.md.template` to `memory/*.md` if Claude hasn't already, and keep line 3 of each file as `*Last updated: YYYY-MM-DD (manual)*` with today's date.
+2. In `tools/memory_contract.json`, set `"adopted"` to today and `"timezone"` to yours (an IANA name like `America/Chicago`; empty uses the machine's clock). Adjust budgets, owners or the schedule if yours differ (the schedule should match the scheduled tasks you set up in step 7).
+3. Run the tests, then the first maintenance pass:
+   ```bash
+   python3 -m unittest discover tools/tests
+   python3 tools/memory_maint.py all --job manual
+   ```
+   This creates `memory/journal/`, `memory/archive/` and `memory/INDEX.md`. Exit 0 or 1 is fine. Exit 2 lists exactly which rule a file breaks; fix it and rerun.
+
+The memory rules every briefing follows are in [`briefings/_memory-contract.md`](./briefings/_memory-contract.md); the reasoning is in [`docs/memory-system.md`](./docs/memory-system.md).
+
+**Upgrading from v0.2?** Follow "Upgrading from v0.2" in [`docs/memory-system.md`](./docs/memory-system.md#upgrading-from-v02). It's mostly moving run logs out of `commitments.md` and converting rows to the new table.
 
 ---
 
@@ -217,7 +233,10 @@ Check `Step 0.5 — Data source health check` in the email. If anything is DEGRA
 Check Gmail search: `subject:EXO_DONE`. Are the emails there? If yes, but commitments aren't getting marked done, the issue is slug-matching in the briefing prompt. Tell Claude: *"Show me the latest EXO_DONE emails and walk me through why they didn't match commitments.md."*
 
 **Memory files keep getting longer.**
-Run the weekly review religiously. The 3-week rule is what keeps memory tight — items older than 3 weeks without reference should be archived. If weekly review isn't pruning aggressively enough, edit `briefings/weekly-review.md` to be more aggressive.
+Run `python3 tools/memory_maint.py check` and open `memory/INDEX.md`. The usual causes: a briefing is writing run notes or "STATUS <date>" lines into `commitments.md` (move them to `logs/run-notes/`; make sure every briefing has the close step from `briefings/_memory-contract.md`), the same insight is being re-added instead of getting an `evidence` bump (the novelty gate catches this), or a file has no owner refreshing it (check its 🟠/🔴 freshness marker in INDEX). Budgets live in `tools/memory_contract.json`. Raise one only if the file really needs the room.
+
+**Briefings stopped writing insights / memory looks stale.**
+Check `INDEX > Last runs` and the latest entry in `logs/run-notes/`. Every evening run has to log an insight decision (`new`, `evidence` or `none — <reason>`); three `none`s in a row shows up as a weekly flag. A briefing with no run note at all for a scheduled slot is listed under "Missed".
 
 **Claude is using the wrong voice in drafts.**
 Edit `skills/draft/SKILL.md`. Add specific examples of your voice. The more example pairs (situation → how you actually replied), the better the mirror.
