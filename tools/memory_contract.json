@@ -1,0 +1,236 @@
+{
+  "version": 2,
+  "adopted": "2026-01-01",
+  "timezone": "",
+  "_comment": "Single source of truth for memory budgets, owners, max ages, tags, schedule and the per-briefing read plan. Edit freely. Set 'adopted' to the day you start using Memory v2 so missed-run checks don't flag earlier days. Add a file here and memory_maint.py starts measuring it. 'timezone' is an IANA name like 'America/New_York' (empty = this machine's local time); it sets the clock for schedules, day counts and timestamps.",
+  "never_touch": [
+    "memory/private/"
+  ],
+  "briefing_archive": "logs/briefings",
+  "files": {
+    "memory/commitments.md": {
+      "class": "H",
+      "budget": 24576,
+      "max_age_days": 3,
+      "owner": "weekly",
+      "schema": "commitments"
+    },
+    "memory/insights.md": {
+      "class": "H",
+      "budget": 20480,
+      "max_age_days": 10,
+      "owner": "weekly",
+      "schema": "insights",
+      "max_active": 25,
+      "max_per_subject": 3,
+      "max_body_chars": 600
+    },
+    "memory/people.md": {
+      "class": "Q",
+      "budget": 24576,
+      "max_age_days": 28,
+      "owner": "weekly"
+    },
+    "memory/life.md": {
+      "class": "Q",
+      "budget": 16384,
+      "max_age_days": 35,
+      "owner": "weekly"
+    },
+    "memory/finances.md": {
+      "class": "Q",
+      "budget": 32768,
+      "max_age_days": 40,
+      "owner": "finance"
+    },
+    "memory/health.md": {
+      "class": "Q",
+      "budget": 49152,
+      "max_age_days": 40,
+      "owner": "health"
+    }
+  },
+  "logs": {
+    "memory/journal/": {
+      "soft": 61440,
+      "hard": 122880,
+      "per_entry_chars": 240,
+      "review_block_chars": 1500
+    },
+    "logs/run-notes/": {
+      "warn": 153600,
+      "per_entry_chars": 1500
+    }
+  },
+  "journal_backfill_months": [],
+  "novelty_threshold": 0.42,
+  "rotation": {
+    "commitments_closed_days": 7,
+    "chronic_after_days": 21,
+    "delegations_closed_days": 14,
+    "weekend_discovered_keep_runs": 4,
+    "weekend_feedback_keep_weeks": 8,
+    "weekly_trends_keep_weeks": 12,
+    "health_events_keep_days": 180,
+    "miss_log_keep_days": 14
+  },
+  "tags": [
+    "#partner",
+    "#child",
+    "#school",
+    "#parents",
+    "#sibling",
+    "#family",
+    "#friends",
+    "#health",
+    "#sleep",
+    "#money",
+    "#fire",
+    "#home",
+    "#subs",
+    "#work",
+    "#career",
+    "#travel",
+    "#estate",
+    "#tracked-project",
+    "#exo-infra",
+    "#agents",
+    "#freeze",
+    "#weekend",
+    "#review",
+    "#migrated"
+  ],
+  "tag_keywords": {
+    "#tracked-project": "tracked project",
+    "#school": "school|teacher|class",
+    "#travel": "flight|trip|hotel"
+  },
+  "schedule": {
+    "morning": {
+      "cron": "0 5 * * *",
+      "code": "M"
+    },
+    "evening": {
+      "cron": "0 21 * * *",
+      "code": "E"
+    },
+    "c2c": {
+      "cron": "0 7 * * *",
+      "code": "C"
+    },
+    "weekly": {
+      "cron": "0 9 * * 0",
+      "code": "W"
+    },
+    "gsd": {
+      "cron": "0 12 * * 5",
+      "code": "G"
+    },
+    "weekend": {
+      "cron": "0 12 * * 5",
+      "code": "F"
+    },
+    "finance": {
+      "cron": "0 9 28 * *",
+      "code": "$"
+    },
+    "health": {
+      "cron": "0 7 28 * *",
+      "code": "H"
+    }
+  },
+  "read_plan": {
+    "columns": [
+      "commitments",
+      "insights",
+      "people",
+      "life",
+      "finances",
+      "health",
+      "journal",
+      "run-notes"
+    ],
+    "jobs": {
+      "morning": [
+        "full",
+        "q (grep subject tag)",
+        "§ core family · q others",
+        "—",
+        "—",
+        "§ latest daily",
+        "yesterday + today",
+        "INDEX > Last runs"
+      ],
+      "evening": [
+        "full",
+        "full",
+        "q",
+        "q",
+        "—",
+        "—",
+        "today",
+        "today"
+      ],
+      "weekly": [
+        "full",
+        "full",
+        "full",
+        "full",
+        "q",
+        "§ weekly trends",
+        "current month",
+        "last 7 days"
+      ],
+      "c2c": [
+        "§ Open sections only",
+        "—",
+        "q",
+        "—",
+        "—",
+        "—",
+        "—",
+        "—"
+      ],
+      "gsd": [
+        "§ Open sections",
+        "—",
+        "q",
+        "—",
+        "§ open action items",
+        "—",
+        "—",
+        "—"
+      ],
+      "weekend": [
+        "—",
+        "—",
+        "§ core family",
+        "q",
+        "—",
+        "—",
+        "lookback #weekend 28d",
+        "—"
+      ],
+      "finance": [
+        "—",
+        "q (#money #fire #subs)",
+        "—",
+        "q",
+        "full",
+        "—",
+        "—",
+        "—"
+      ],
+      "health": [
+        "—",
+        "q (#health #sleep)",
+        "—",
+        "—",
+        "—",
+        "full",
+        "lookback #health 30d",
+        "—"
+      ]
+    }
+  }
+}
