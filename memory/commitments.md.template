@@ -1,51 +1,42 @@
-# Commitments
+# Commitments — Memory
 
-Every promise made, every promise owed. The exocortex's most-touched file.
+*Last updated: {{YYYY-MM-DD}} (manual)*
 
-> **How it works:** Three sections — what you said you'd do, what others said they'd do, and what's done. Items move through statuses: `PENDING` → `CALENDAR NEEDED` → `IN PROGRESS` → `DONE`. The morning briefing surfaces anything stuck for too long.
+> **Worklist only** (Memory v2). The exocortex's most-touched file, kept small on purpose (≤24 KB, enforced by `tools/memory_maint.py`).
+> - One row per item, forever. IDs (`C-NNNN`) are permanent — get the next one with `python3 tools/memory_maint.py next-id C`.
+> - `Slug` is the `EXO_DONE::<slug>` acknowledgment key.
+> - `Note` is ≤160 chars and holds **current state only**. No history in rows, no run notes, no "STATUS <date>" lines, no day counts — `memory/INDEX.md` computes ages, and history goes to `memory/journal/`.
+> - Closing = set `State`, set `Touched` to today, move the row to `Closed (last 7 days)`. The script archives it to `memory/archive/commitments/YYYY-MM.md` a week later.
+> - Rows open 21+ days are flipped to `CHRONIC` by the script: one compact line in briefings, one Keep / Accept / Reframe question in the weekly review, no daily nagging.
 
----
+## Pinned projects
+<!-- ≤3 projects, ≤1,500 chars each. Current state only — dated progress goes to the journal. -->
 
-## I Said I Would
+### 🟢 {{TRACKED_PROJECT_NAME}} (P-TP) — #1 tracked project
+- **State:** {{one line: where it stands right now}}
+- **Live items:** {{C-IDs of the open rows that move it}}
+- **Standing probe:** {{the search the morning brief runs to detect real movement, e.g. an email query}}
+- **Done so far:** {{milestones, dated}}
 
-Promises you made. Status, what, who, when committed.
+## Open — I Said I Would
+| ID | Slug | What | Who | Due | State | Opened | Touched | Note |
+|----|----|----|----|----|----|----|----|----|
 
-| Status | What | To whom | Committed | Due | Notes |
-|--------|------|---------|-----------|-----|-------|
-| `PENDING` | {{thing you said you'd do}} | {{person}} | {{date}} | {{date or "TBD"}} | {{context}} |
-| `CALENDAR NEEDED` | {{social plan needing event}} | {{person}} | {{date}} | {{date/time agreed}} | {{venue, prep, etc.}} |
+## Open — They Said They Would
+| ID | Slug | What | Who | Due | State | Opened | Touched | Note |
+|----|----|----|----|----|----|----|----|----|
 
-<!-- Example (delete before saving):
-| `CALENDAR NEEDED` | Coffee at <cafe> | <Friend name> | 2026-05-10 | Sat 2026-05-17 10am | They suggested 10am, confirmed via WhatsApp
+## Closed (last 7 days)
+| ID | Slug | What | Who | Due | State | Opened | Touched | Note |
+|----|----|----|----|----|----|----|----|----|
+
+<!--
+State vocabulary
+  Open:   PENDING · CALENDAR NEEDED · SCHEDULED / URGENT_SCHEDULED (event created; auto-closes when the date passes) · PARKED_GSD (sent to the Friday GSD block)
+          · IN PROGRESS · WAITING (ball with someone else)
+          · DELEGATED (an agent/assistant owns it) · BLOCKED (Note says on what) · CHRONIC (set by the script after 21 days)
+  Closed: DONE · DROPPED · MOOT · ACCEPTED (you chose to stop tracking it) · SUPERSEDED (Note names the successor ID)
+
+Example row (copy the part between the backticks into a table above; first ID is C-0001):
+`| C-0007 | coffee-with-friend | Coffee at <cafe> with <Friend> | <Friend> | 2026-05-17 | CALENDAR NEEDED | 2026-05-10 | 2026-05-10 | They suggested Sat 10am |`
 -->
-
----
-
-## They Said They Would
-
-Promises others made to you. Same format. Useful for nudging.
-
-| Status | What | From whom | They committed | Expected | Notes |
-|--------|------|-----------|----------------|----------|-------|
-| `WAITING` | {{thing they said they'd do}} | {{person}} | {{date}} | {{date}} | {{context}} |
-
----
-
-## Done
-
-Recently completed. Auto-archived after 4 weeks during weekly review.
-
-| Completed | What | Acknowledged via |
-|-----------|------|------------------|
-| {{date}} | {{thing}} | {{mailto link / digital trace / inferred}} |
-
----
-
-## Status Definitions
-
-- `PENDING` — Promise made, no further action taken yet.
-- `CALENDAR NEEDED` — Promise involves a date/time and should become a calendar event. Picked up by the daily commitment-to-calendar sweep.
-- `IN PROGRESS` — Work has started.
-- `WAITING` — On someone else (used in "They Said They Would" section).
-- `DONE` — Completed. Acknowledged via mailto link, digital trace (sent message, calendar event), or self-report.
-- `OVERDUE` — Past expected date with no status change. Surfaced loudly in morning briefings.

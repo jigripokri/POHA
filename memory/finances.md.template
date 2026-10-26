@@ -1,5 +1,7 @@
 # Finances
 
+*Last updated: {{YYYY-MM-DD}} (manual)*  <!-- line 3: keep this header current; memory_maint.py measures staleness from it -->
+
 Loaded only when a financial question arises. Not surfaced in casual briefings.
 
 > **Sensitivity warning:** This file may end up containing your net worth, account balances, holdings, and tax situation. The `.gitignore` for this repo excludes the `memory/` directory by default — keep it that way. If you fork publicly, double-check before you push.

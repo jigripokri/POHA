@@ -1,0 +1,27 @@
+# Journal — {{YYYY-MM}}
+
+> **The lookback ledger** (Memory v2). One file per month at `memory/journal/YYYY-MM.md`, created automatically. Append-only — never edit or reorder.
+> One line per **event**: `- YYYY-MM-DD HH:MM · <briefing> · <C-/I-/ref or —> · <event> · <text ≤200 chars> · #tag [#tag]`
+> Events: `opened · closed · state · decision · fact · calendar · sent · incident · evidence · insight · review`.
+> Steady state ("still open", "re-verified", "Day 46") is **not** an event and is never written.
+> Write lines with the script (it validates format, date heading and tags):
+> `python3 tools/memory_maint.py journal --job evening --ref C-0007 --event closed --text "Coffee happened, great catch-up" --tags "#friends"`
+> Read it back: `python3 tools/memory_maint.py lookback --tag "#friends" --month 2026-05` · `--id C-0007` · `--event decision --days 90`
+
+<!-- Example (delete — this file is only a format reference; real month files are created by the script):
+
+## 2026-05-10
+- 2026-05-10 05:12 · morning · C-0007 · opened · Coffee at <cafe> with <Friend>, Sat 10am · #friends
+- 2026-05-10 21:05 · evening · — · fact · <Friend> is moving cities in August · #friends
+
+## 2026-05-17
+- 2026-05-17 21:03 · evening · C-0007 · closed · DONE: coffee happened · #friends
+- 2026-05-17 21:03 · evening · I-0002 · evidence · now 4: sibling called unprompted, relaying a parent health update · #sibling #parents
+
+## 2026-05-18
+- 2026-05-18 09:40 · weekly · R-20260518-W · review · Week May 12–18 · #review
+  - Scorecard: closed 6 · opened 9 · chronic 2
+  - Story: <≤400 chars>
+  - Chronic decisions: C-0003 keep · C-0004 accepted
+  - Memory: 0 budget violations · refreshed life.md
+-->

@@ -1,5 +1,7 @@
 # Health
 
+*Last updated: {{YYYY-MM-DD}} (manual)*  <!-- line 3: keep this header current; memory_maint.py measures staleness from it -->
+
 Loaded only when a health question arises. Not surfaced in casual briefings.
 
 > **Sensitivity warning:** This file may contain bloodwork, diagnoses, medications, mental health notes. Like `finances.md`, it should never leave your machine. `.gitignore` excludes `memory/` by default.

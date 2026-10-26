@@ -1,5 +1,7 @@
 # Life
 
+*Last updated: {{YYYY-MM-DD}} (manual)*  <!-- line 3: keep this header current; memory_maint.py measures staleness from it -->
+
 Goals, priorities, the horizon. Refreshed during weekly review.
 
 > **How to populate:** Write what's actually true right now, not aspirational. If you'd be embarrassed to say it out loud, but it's true, write it anyway. The exocortex needs the real version, not the LinkedIn version.
