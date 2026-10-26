@@ -20,9 +20,11 @@ What's shipped, what's next, what's blocked. Edit this for your fork.
 - ✅ Bloodwork reminder (twice-yearly, the month before each draw)
 
 ### Layer 2 — Memory System
-- ✅ Seven memory file templates
-- ✅ 3-week rule baked into weekly review
-- ✅ Carry-on gating
+- ✅ Memory file templates (curated state + journal format)
+- ✅ Carry-on gating (never read, indexed, journaled or touched by tooling)
+- ✅ **Memory v2: bloat & drift guardrails** — budgets/owners/max ages in `tools/memory_contract.json`; `tools/memory_maint.py` (check · rotate · journal-diff · index · lookback · novelty) run at the close of every briefing; generated `memory/INDEX.md` read first; append-only monthly journal for lookbacks; run notes moved to `logs/run-notes/`; permanent `C-`/`I-` IDs. *(2026-10)*
+- ✅ Automatic CHRONIC state after 21 days + weekly Keep / Accept / Reframe (replaces the manual 3-week rule)
+- ✅ Insight lifecycle — ≤25 active lenses, ≤3 per subject, evidence counts, deterministic novelty gate, mandatory nightly insight decision
 
 ### Layer 3 — Skills
 - ✅ /draft
@@ -39,6 +41,7 @@ What's shipped, what's next, what's blocked. Edit this for your fork.
 ### Migrations (completed)
 - ✅ **WhatsApp: Baileys (TS) → whatsmeow (Go) bridge** — native LID/name resolution, no more dual-JID juggling; persistent startup-triggered service + bridge-liveness assertion. *(2026-06)*
 - ✅ **Health: Fitbit Web API → Google Health API** — reconciled multi-source stream, briefings call the health MCP directly (sync script retired), four cadence-tuned health surfaces. *(2026-06)*
+- ✅ **Memory v1 → v2** — one-pass migration: run logs out of the worklist, insights restructured into lenses, rows converted to the ID table, journal backfilled. Upgrade guide in `docs/memory-system.md`. *(2026-10)*
 
 ---
 
@@ -69,6 +72,8 @@ These are the highest-leverage extensions. Pick what fits your life.
 - [ ] **Voice-mode briefings**: have the morning brief read aloud while you make coffee
 - [ ] **Briefing widgets**: a phone widget that displays today's three from the morning brief
 - [ ] **Cross-device memory sync**: keep memory in sync across multiple machines (probably via a private git repo)
+- [ ] **Memory health in a dashboard**: chart budget usage, chronic count and insight decisions over time from `logs/maint/` and the journal
+- [ ] **Migration helper script**: automate the v0.2 → v0.3 memory upgrade (today it's a guided manual pass)
 - [ ] **Receipt OCR**: auto-extract expenses from photo receipts into a finance log
 
 ---
