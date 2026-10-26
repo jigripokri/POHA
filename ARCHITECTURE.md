@@ -39,11 +39,11 @@ Every briefing follows the same five-step recipe:
 
 **Step 0.5 — Data source health check.** Ping every MCP in parallel, record UP/DOWN. If anything is unreachable, surface a `⚠️ DEGRADED` banner in the email. Never block the briefing — a degraded briefing is better than no briefing. Two special cases: **WhatsApp** needs a *liveness assertion* (connected + traffic in the last 24h), because an empty scan from a dead bridge looks exactly like a quiet day; and **health** is non-blocking and noise-suppressed (silent on a single down-day, `DEGRADED` only after several). See [`docs/data-sources.md`](./docs/data-sources.md#health-check-protocol-step-05).
 
-**Step 1 — Memory load.** Read the seven memory files. This is the operator's context for everything that follows.
+**Step 1 — Memory load.** Read `memory/INDEX.md`, then only the files and sections the briefing's read plan names. This is the operator's context for everything that follows.
 
 **Step 2..N — Scan inputs.** WhatsApp groups, DMs, Gmail, Calendar, Tasks, SMS, Google Health, Monarch — whatever this briefing needs. Always parallelize. Apply tier weights so high-signal threads surface first.
 
-**Step N+1 — Emit + Update.** Compose the email with action items + acknowledgment links. Update memory files with anything new (commitments made, plans confirmed, insights surfaced). Send.
+**Step N+1 — Emit + Update.** Compose the email with action items + acknowledgment links. Send. Then update memory with anything new (commitments made, plans confirmed, insights surfaced), append a run note, and run `python3 tools/memory_maint.py all` (see Layer 2).
 
 The seven briefings in this repo:
 
@@ -51,7 +51,7 @@ The seven briefings in this repo:
 |----------|------|--------------|
 | `morning-brief.md` | 5am daily | The big one — full sweep |
 | `evening-reflection.md` | 9pm daily | Lighter pass, catches what morning missed |
-| `weekly-review.md` | Sun 9am | Memory pruning + priority refresh |
+| `weekly-review.md` | Sun 9am | Memory maintenance (chronic decisions, stale files, insight lifecycle) + priority refresh |
 | `commitment-to-calendar.md` | 7am daily | Triage commitments → calendar events |
 | `gsd-friday.md` | Fri noon | Punch list for Friday focus block |
 | `weekend-fun-finder.md` | Fri noon | Local event search, scored for your family |
@@ -71,39 +71,52 @@ Claude creates the cron entry. You can list, update, and delete scheduled tasks 
 
 ## Layer 2: The Memory System
 
-Seven files. Plain markdown. They are the exocortex.
+Plain markdown, in two kinds of files that never mix. They are the exocortex.
 
-### Core four (general life)
+**Curated state** describes the present. Each file is small, rewritten in place, and has a byte budget, an owner (the briefing responsible for keeping it fresh) and a max age, all set in [`tools/memory_contract.json`](./tools/memory_contract.json). **History** records what happened. It is append-only, split by month, and never loaded in full.
 
-| File | Purpose |
+### Curated state
+
+| File | Purpose | Budget · owner · max age |
+|------|---------|--------------------------|
+| `commitments.md` | The worklist. ≤3 pinned projects (current state only), `Open — I Said I Would`, `Open — They Said They Would`, `Closed (last 7 days)`. One row per item with a permanent `C-NNNN` ID: `ID \| Slug \| What \| Who \| Due \| State \| Opened \| Touched \| Note`. | 24 KB · weekly · 3 d |
+| `insights.md` | Non-obvious patterns as **lenses**, not action items. ≤25 active, ≤3 per subject, newest first, each with a permanent `I-NNNN` ID and an evidence count. | 20 KB · weekly · 10 d |
+| `people.md` | Relationship context. Who matters, open threads, birthdays, things to remember next time. | 24 KB · weekly · 28 d |
+| `life.md` | Goals, priorities, quarterly view. The horizon document. | 16 KB · weekly · 35 d |
+| `finances.md` | Net worth snapshot, properties, FIRE progress, open financial decisions. Read only for financial questions. | 32 KB · finance · 40 d |
+| `health.md` | Bloodwork baselines, fitness routine, active concerns. Read only for health questions. | 48 KB · health · 40 d |
+| `<person>.md` *(optional)* | Per-person context for someone who needs ongoing tracking. Add it to the contract so it gets a budget and an owner too. | you choose |
+
+Every curated file carries `*Last updated: YYYY-MM-DD (<briefing>)*` on line 3.
+
+### History (append-only)
+
+| Path | Purpose |
 |------|---------|
-| `people.md` | Relationship context. Who matters, open threads, last contact, birthdays, kids' names, things that came up that you should remember next time. |
-| `commitments.md` | Promises. Two sections: "I Said I Would" and "They Said They Would." Each item has a status (PENDING / CALENDAR NEEDED / DONE) and a date. |
-| `life.md` | Goals, priorities, quarterly view. The horizon document. |
-| `insights.md` | Non-obvious patterns. Things worth re-reading in a year. Wildcards. The exocortex's strategic lens. |
-
-### Domain three (specific contexts)
-
-| File | Purpose |
-|------|---------|
-| `finances.md` | Net worth snapshot, properties, FIRE progress, open financial decisions. Read only when a financial question arises. |
-| `health.md` | Bloodwork baselines, fitness routine, active concerns, doctor info. Read only when a health question arises. |
-| `<person>.md` *(optional)* | Per-person context for someone who needs ongoing tracking — a kid, an aging parent, a high-touch direct report. One file per person who needs it. |
+| `memory/journal/YYYY-MM.md` | The lookback ledger. One line per **event**: opened · closed · state · decision · fact · calendar · sent · incident · evidence · insight · review. "Still open" is not an event. |
+| `logs/run-notes/YYYY-MM.md` | One short entry per briefing run: result, source health, reads, writes, insight decision. Operational, not memory. |
+| `memory/archive/**` | Closed commitments by month; retired insights by quarter, full text. |
+| `logs/briefings/` | The content of every sent briefing. |
+| `memory/INDEX.md` | **Generated** after every run. Staleness, budgets, the age of every open commitment, insight caps, missed runs, and each briefing's read plan. Read first by everything. |
 
 ### Private (gated)
 
 | File | Purpose |
 |------|---------|
-| `memory/private/carry-on.md` | Sensitive context. **Strictly gated.** Never read automatically. Never referenced in any outbound message. Never mentioned unprompted. Only loaded when you explicitly invoke it. |
+| `memory/private/carry-on.md` | Sensitive context. **Strictly gated.** Never read automatically. Never referenced in any outbound message. Never mentioned unprompted. Only loaded when you explicitly invoke it. Never indexed, journaled or touched by the maintenance script. |
 
 ### Operating rules
 
-- **Read at start, update at end.** Every briefing reads the four core files at Step 1 and updates them at Step N+1.
-- **3-week rule.** If an item in memory hasn't been referenced or relevant in 3 weeks, archive or remove it during weekly review. Memory stays tight.
-- **Save if it will matter in 1+ weeks.** Major decisions, recurring relationships, active deadlines, non-obvious patterns. **Don't save** completed one-off tasks, social chatter, anything re-derivable from re-scanning inputs.
-- **Memory is not a journal.** It's working state for the operator. Keep it tight.
+- **Read INDEX first, then only what you need.** Each briefing's read plan says which files it reads in full, which by section, and which only by grep. Shared rules: [`briefings/_memory-contract.md`](./briefings/_memory-contract.md).
+- **Events go to the journal; current state goes to curated files.** No run notes, day counters or "STATUS <date>" lines in curated files. The script rejects them.
+- **CHRONIC is automatic.** Rows open 21+ days flip to `CHRONIC`: one compact line in briefings, one Keep / Accept / Reframe question in the weekly review. This replaces the old manual 3-week rule.
+- **Insights have a lifecycle.** A deterministic novelty gate before any new lens, `evidence` bumps for repeats, retire/supersede to the quarterly archive. The evening makes an insight decision every night, even if it's `none — <reason>`.
+- **Save if it will matter in 1+ weeks.** **Don't save** completed one-off tasks, social chatter, anything re-derivable from re-scanning inputs.
+- **Every briefing closes with `python3 tools/memory_maint.py all`**: check budgets/freshness/schemas → rotate (CHRONIC, archive closed rows and retired lenses) → journal-diff (log anything a run forgot) → regenerate INDEX. Stdlib Python, atomic writes, never deletes.
 
-Full breakdown in [`docs/memory-system.md`](./docs/memory-system.md).
+### Why the rules exist
+
+v0.1 said "read everything, update at the end, prune weekly." In production that drifted. Run notes turned the worklist into a log. Insights were rewritten instead of reinforced. Pruning depended on someone remembering to do it, and "current quarter" sections went stale for months. Prompts alone don't hold a budget. A script that fails the run does. Full story, lookback recipes and the upgrade path: [`docs/memory-system.md`](./docs/memory-system.md).
 
 ---
 

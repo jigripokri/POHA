@@ -30,8 +30,8 @@ The next briefing runs Step 0:
 Search Gmail for subject:EXO_DONE in the last 36 hours.
 For each match:
   - Extract the slug after EXO_DONE::
-  - Find matching commitment in commitments.md
-  - Update status to DONE
+  - Find matching commitment in commitments.md (the `Slug` column)
+  - Set State to DONE, move the row to `Closed (last 7 days)`, write one journal `closed` line
   - Archive the signal email
 ```
 
@@ -86,7 +86,7 @@ Full HREF: `mailto:you@example.com?subject=EXO_DONE%3A%3Acall-parents`
 
 The briefing's Step 0 does fuzzy matching to be forgiving:
 
-1. **Exact slug match.** If `commitments.md` has an item with the exact slug, mark it done.
+1. **Exact slug match.** If a `commitments.md` row has that exact value in its `Slug` column, mark it done.
 2. **Title fuzzy match.** If no exact slug match, compute slugs from each PENDING commitment's title. Pick the closest by Levenshtein distance, threshold 3.
 3. **No match.** If still nothing, surface in the briefing email's "Loose Ends" section: "You acknowledged `call-mom-tonight` but I can't find a matching commitment. Should I add it as a one-off done?"
 
@@ -124,7 +124,7 @@ This matters because over a year, you'll send yourself thousands of these. Keepi
 ## Edge cases
 
 **Tapping a link by accident.**
-You tap "I did this" but you didn't actually do it. Easy fix: open commitments.md and move the item back to PENDING. The exocortex will catch up on the next briefing.
+You tap "I did this" but you didn't actually do it. Easy fix: open commitments.md, move the row back to its Open section, and set State to PENDING. The exocortex will catch up on the next briefing (and the journal-diff logs the reopen).
 
 **The same action surfaces multiple times across briefings before you tap.**
 Step 0 only processes signals received *since the last briefing*. If you tapped 3 times, only the first is matched; the rest are ignored.
@@ -133,7 +133,7 @@ Step 0 only processes signals received *since the last briefing*. If you tapped 
 Falls through to free-text parsing. Less reliable, but works.
 
 **You forget to tap and the commitment ages out.**
-The 3-week rule eventually archives it. If you want to recover it, search commitments.md for the slug.
+After 21 days open, the script marks it `CHRONIC`. It drops to one compact line in briefings, and the weekly review asks once whether to keep, accept (stop tracking), or reframe it, with `EXO_DONE::keep-<slug>` / `EXO_DONE::accept-<slug>` links. Nothing is lost: closed rows are archived to `memory/archive/commitments/`, and `python3 tools/memory_maint.py lookback --grep <slug> --archive` finds its whole history.
 
 ---
 

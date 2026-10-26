@@ -28,7 +28,7 @@ Nine scheduled tasks already wired up:
 
 - **5am daily — Morning briefing.** Scans your WhatsApp groups + DMs, Gmail, Calendar, and tasks. Flags commitments, unanswered threads, and what's on your plate today. Emails you the result with one-tap acknowledgment links for every action item.
 - **9pm daily — Evening reflection.** Catches plans confirmed after the morning pass, updates memory.
-- **Sunday 9am — Weekly review.** Prunes stale memory (3-week rule), refreshes priorities, reviews relationship health.
+- **Sunday 9am — Weekly review.** Runs memory maintenance (keep/accept/reframe chronic items, refresh stale files, retire old insights), refreshes priorities, reviews relationship health.
 - **7am daily — Commitment → Calendar.** Turns every "let's grab coffee Saturday" into a real calendar event.
 - **Friday noon — GSD agenda.** Builds a punch list from your tasks + open commitments for a Friday focus block.
 - **Friday noon — Weekend Fun Finder.** Searches local events, scored against your household's preferences.
@@ -50,7 +50,7 @@ Five on-demand skills:
 
 Most personal-AI projects fail in predictable ways. Here's what we did differently.
 
-**1. Persistent memory in plain markdown.** Seven files. Claude reads them at the start of every task, updates them at the end. No vector DB. No RAG. No fine-tuning. Just files. The reason this works: markdown is human-editable, version-controllable, and grep-able. You can correct POHA's memory by opening a file in any editor. You own the state. (See [`docs/memory-system.md`](./docs/memory-system.md).)
+**1. Persistent memory in plain markdown that doesn't bloat.** No vector DB. No RAG. No fine-tuning. Just files: small curated ones that describe the present (each with a byte budget, an owner and a max age) and append-only monthly logs that record what happened. A stdlib Python script enforces the split after every briefing, rotates closed items into archives, and writes an index every run reads first. The reason this works: markdown is human-editable and grep-able, and the budgets are numbers a script checks, not adjectives in a prompt. You can correct POHA's memory by opening a file in any editor, and you can ask "what happened with X in July?" a year later. You own the state. (See [`docs/memory-system.md`](./docs/memory-system.md).)
 
 **2. The acknowledgment loop.** This is the hardest problem in personal AI: how do you close the loop on actions that happen offline? You called your mom. There's no API event. The agent has no way to know.
 
@@ -71,9 +71,11 @@ Three layers. Full breakdown in [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 │   GSD agenda · weekend finder · monthly finance ·         │
 │   monthly health memo · bloodwork reminder                │
 ├──────────────────────────────────────────────────────────┤
-│ Layer 2 — The Memory System (seven markdown files)        │
-│   people · commitments · life · insights ·                │
+│ Layer 2 — The Memory System (plain markdown)              │
+│   curated: commitments · insights · people · life ·       │
 │   finances · health · carry-on (private, gated)           │
+│   history: journal · run notes · archive · INDEX          │
+│   kept small by tools/memory_maint.py (budgets + rotation)│
 ├──────────────────────────────────────────────────────────┤
 │ Layer 3 — Skills (on-demand commands)                     │
 │   /draft · /reply · /wildcard · /gsd · /roast             │
@@ -169,8 +171,10 @@ poha/
 │   ├── insights.md.template
 │   ├── finances.md.template
 │   ├── health.md.template
+│   ├── journal.md.template    ← format of the monthly event ledger
 │   └── private/carry-on.md.template
-├── briefings/                 ← the seven scheduled task prompts
+├── tools/                     ← memory_maint.py + memory_contract.json + tests
+├── briefings/                 ← the scheduled task prompts + _memory-contract.md
 ├── skills/                    ← /draft, /reply, /wildcard, /gsd, /roast
 ├── docs/                      ← deep dives on tricky bits
 └── examples/                  ← a sanitized example morning briefing

@@ -43,20 +43,21 @@ Scheduled tasks that produce structured emails. See `briefings/` for prompts. Ea
 
 - **Step 0** — Acknowledgment scan. Search Gmail for `subject:EXO_DONE`. Update commitments.
 - **Step 0.5** — Data source health check. Ping every source in parallel. Surface `⚠️ DEGRADED` banner if anything is down. Never block the briefing. For WhatsApp specifically, assert the bridge is **connected AND has received a message in the last 24h** — an empty scan from a silently disconnected bridge looks exactly like a quiet day, so treat "no activity at all in 24h" as bridge-down, not silence.
-- **Step 1** — Memory load. Read core memory files.
+- **Step 1** — Memory load. Read `memory/INDEX.md` first, then only what the briefing's read plan says (see Memory System below).
 - **Steps 2..N** — Scan inputs (parallelize aggressively).
-- **Step N+1** — Compose + send + update memory.
+- **Step N+1** — Compose + send + update memory, then the close step from `briefings/_memory-contract.md` (run note + `python3 tools/memory_maint.py all`).
 
 ### Layer 2: The Memory System
 
-Seven files in `memory/`. Read at start of every task. Update at end of every briefing.
+Plain markdown in `memory/`, in two kinds of files that never mix: **small curated files** (budgeted, owned, dated) that describe the present, and **append-only monthly logs** that record what happened. `tools/memory_maint.py` enforces the difference after every briefing and regenerates `memory/INDEX.md`. Full rules in the Memory System section below and [`docs/memory-system.md`](./docs/memory-system.md).
 
+- `commitments.md` — the worklist: pinned projects + open rows with permanent `C-NNNN` IDs + Closed (last 7 days)
+- `insights.md` — ≤25 active lenses with permanent `I-NNNN` IDs. Lenses, not action items.
 - `people.md` — relationships, open threads
-- `commitments.md` — "I Said I Would" / "They Said They Would" / "Done"
 - `life.md` — goals, priorities, quarterly view
-- `insights.md` — non-obvious patterns. Lenses, not action items.
 - `finances.md` — load only when financial question arises
 - `health.md` — load only when health question arises
+- `journal/YYYY-MM.md` — the append-only event ledger, for lookbacks
 - `memory/private/carry-on.md` — **STRICTLY PRIVATE. NEVER read automatically. NEVER referenced in any draft, email, calendar event, or briefing. NEVER mentioned unprompted. Load ONLY when {{USER_NAME}} explicitly invokes it.**
 
 ### Layer 3: Skills
@@ -95,29 +96,35 @@ The exocortex filters every input through these tiers. Edit them to match what a
 
 ## Memory System
 
-Four core memory files are the exocortex's persistent brain. **Read them at the start of every task. Update them at the end of every briefing.**
+The memory is the exocortex's persistent brain. It stays small on purpose: every curated file has a byte budget, an owner and a max age (in `tools/memory_contract.json`), and history lives in append-only logs instead of piling up in the files every briefing reads. Every briefing follows the shared rules in [`briefings/_memory-contract.md`](./briefings/_memory-contract.md). Full rationale and lookback recipes: [`docs/memory-system.md`](./docs/memory-system.md).
 
-Files:
+### Curated state (small, rewritten in place)
 
-- `memory/people.md` — Relationship context, who matters, open threads
-- `memory/commitments.md` — "I Said I Would" / "They Said They Would" / "Done"
-- `memory/life.md` — Goals, priorities, quarterly view, patterns
-- `memory/insights.md` — Deep, timeless insights about {{USER_NAME}}'s life. Non-obvious patterns, strategic truths, wildcard observations. Not action items — lenses. Add to this whenever a genuinely non-obvious insight surfaces during briefings or conversations.
+- `memory/commitments.md` — The worklist. ≤3 pinned projects (current state only) + `Open — I Said I Would` / `Open — They Said They Would` tables + `Closed (last 7 days)`. Columns: `ID | Slug | What | Who | Due | State | Opened | Touched | Note`. One row per item, forever; `Note` is ≤160 chars of current state.
+- `memory/insights.md` — Deep, timeless insights about {{USER_NAME}}'s life. Non-obvious patterns, strategic truths, wildcard observations. Not action items — lenses. ≤25 active, ≤3 per subject, newest first, each with an evidence count.
+- `memory/people.md` — Relationship context, who matters, open threads.
+- `memory/life.md` — Goals, priorities, quarterly view, patterns.
 - `memory/finances.md` — Net worth snapshot, properties, income, tax situation, open financial decisions. Read when any financial question arises. Do NOT surface in casual briefings unless a financial action item is due.
 - `memory/health.md` — Bloodwork baselines, fitness routine, active concerns, doctor info. Read when any health question arises.
-- `memory/private/carry-on.md` — **STRICTLY PRIVATE. NEVER read automatically. NEVER referenced in any draft, email, calendar event, or briefing. NEVER mentioned unprompted. Load ONLY when {{USER_NAME}} explicitly invokes it (e.g., "check carry-on", "open carry-on context"). Nothing from this file ever appears in outbound communication.**
+- `memory/private/carry-on.md` — **STRICTLY PRIVATE. NEVER read automatically. NEVER referenced in any draft, email, calendar event, or briefing. NEVER mentioned unprompted. Load ONLY when {{USER_NAME}} explicitly invokes it (e.g., "check carry-on", "open carry-on context"). Nothing from this file ever appears in outbound communication.** Not indexed, not journaled, never touched by the maintenance script.
 
-### What to Save
+Every curated file has `*Last updated: YYYY-MM-DD (<briefing>)*` on line 3. That header is the only per-run mark it ever gets.
 
-Save if it will matter in 1+ weeks: major decisions, recurring relationships, active deadlines, non-obvious patterns, commitments made in chat messages.
+### History (append-only, for lookbacks)
 
-### What NOT to Save
+- `memory/journal/YYYY-MM.md` — one line per **event** (opened · closed · state · decision · fact · calendar · sent · incident · evidence · insight · review), written with `python3 tools/memory_maint.py journal …`. Steady state ("still open", "Day 46") is never written.
+- `logs/run-notes/YYYY-MM.md` — one short entry per briefing run (`memory_maint.py run-note …`). Operational, not memory.
+- `memory/archive/**` — closed commitments by month, retired insights by quarter (full text). Written by the script.
+- `memory/INDEX.md` — generated after every run. **Read it first in every task**: it lists what's stale, over budget, chronic, and how old every open commitment is.
 
-Completed one-off tasks, social chatter, anything re-derivable from re-scanning WhatsApp/Gmail/Calendar, admin noise.
+### The rules
 
-### 3-Week Rule
-
-If an item in memory hasn't been referenced or relevant in 3 weeks, archive or remove it during weekly review. Memory should stay tight.
+- **Read INDEX, then only what you need.** Full-read only what your briefing's read plan says; use `memory_maint.py section` for one heading and `memory_maint.py lookback` / grep for the rest. Conversations (not briefings) read INDEX plus whatever the question touches.
+- **What to save:** anything that will matter in 1+ weeks — decisions, recurring relationships, active deadlines, promises in either direction, non-obvious patterns. History goes to the journal; only *current state* goes into a curated file.
+- **What NOT to save:** completed one-off tasks (the journal `closed` line is enough), social chatter, anything re-derivable from re-scanning messages/email/calendar, admin noise, run mechanics, day counts.
+- **CHRONIC replaces the 3-week rule.** The script flips any row open 21+ days to `CHRONIC`. Briefings give chronic rows one compact line; the weekly review asks Keep / Accept / Reframe once. No daily nagging.
+- **Insights have a lifecycle.** New lens only if `memory_maint.py novelty` passes and the subject has <3 active lenses; a repeat bumps `evidence`; retire or supersede via the metadata line. The evening makes an insight decision every night: new / evidence / `none — <reason>`. A lens frames a decision; it is never a reason to skip a rule.
+- **Close every briefing with `python3 tools/memory_maint.py all --job <briefing>`** (check + rotate + journal-diff + index). Nothing is ever deleted; everything leaves a curated file by being archived first.
 
 ---
 
@@ -200,7 +207,7 @@ For each contact, store: name, a single identity (the JID/handle the store resol
 - **Confirmations:** "works", "done", "we're in", "see you", "sounds good"
 - **Non-calendar promises:** "I'll send you", "I'll share", "let me check and get back" → route to commitments.md "I Said I Would", NOT calendar.
 
-When detected, add to `commitments.md` under "I Said I Would" with status `CALENDAR NEEDED` (for date/time plans) or `PENDING` (for non-calendar promises).
+When detected, add one row to `commitments.md` under `Open — I Said I Would` (ID from `python3 tools/memory_maint.py next-id C`) with State `CALENDAR NEEDED` (for date/time plans) or `PENDING` (for non-calendar promises), plus one journal `opened` line. If a row for the same plan already exists, update it instead of adding a second one.
 
 ---
 
@@ -211,7 +218,7 @@ Briefing emails include **"✅ I did this"** or **"📞 I called"** `mailto:` li
 ### How It Works
 
 1. **Outbound:** Every action item gets a tappable link: `mailto:{{USER_EMAIL}}?subject=EXO_DONE%3A%3A{{slug}}`
-2. **Inbound:** Every briefing's Step 0 searches Gmail for `subject:EXO_DONE`, extracts slugs, matches to `commitments.md`, updates status to ✅, archives the signal.
+2. **Inbound:** Every briefing's Step 0 searches Gmail for `subject:EXO_DONE`, extracts slugs, matches them to the `Slug` column in `commitments.md` (exact first, then fuzzy on `What`), sets State `DONE`, moves the row to `Closed (last 7 days)`, writes one journal `closed` line, and archives the signal. For CHRONIC rows, `keep-<slug>` keeps tracking and `accept-<slug>` stops tracking (State `ACCEPTED`).
 3. **Cleanup:** Signal emails are trashed/archived to keep inbox clean.
 4. **Fallback:** Parse free-text replies for "done:", "did it", "called", "✅".
 
